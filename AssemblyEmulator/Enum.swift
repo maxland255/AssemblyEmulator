@@ -6,3 +6,8 @@
 //
 
 import Foundation
+
+
+enum EmulatorType: String, CaseIterable {
+    case intel_x86 = "Intel x86"
+}

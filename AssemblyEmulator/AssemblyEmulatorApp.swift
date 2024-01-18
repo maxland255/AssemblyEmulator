@@ -12,6 +12,7 @@ struct AssemblyEmulatorApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-        }
+                .frame(minWidth: 1000, idealWidth: 1000, maxWidth: .infinity, minHeight: 550, idealHeight: 550, maxHeight: .infinity)
+        }.defaultSize(CGSize(width: 1000, height: 550))
     }
 }

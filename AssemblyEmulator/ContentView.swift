@@ -8,14 +8,33 @@
 import SwiftUI
 
 struct ContentView: View {
+    
+    @State var emulatorType: EmulatorType = .intel_x86
+    
+    @State var parser = Asm80186Parser()
+    @ObservedObject var interpreter = Asm80186Interpreter()
+    
+    @State var sourceCode = ""
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationStack {
+            switch emulatorType {
+            case .intel_x86:
+                Intel_x86_80186_UI()
+            }
+        }.toolbar {
+            ToolbarItem(placement: .secondaryAction) {
+                Menu {
+                    ForEach(EmulatorType.allCases, id: \.self) { emulator in
+                        Button(emulator.rawValue) {
+                            emulatorType = emulator
+                        }
+                    }
+                } label: {
+                    Text(emulatorType.rawValue)
+                }
+            }
         }
-        .padding()
     }
 }
 

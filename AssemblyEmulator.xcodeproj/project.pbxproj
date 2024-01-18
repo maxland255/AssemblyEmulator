@@ -3,23 +3,39 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B80AD3EC2B599A1500B2C04E /* Enum.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80AD3EB2B599A1500B2C04E /* Enum.swift */; };
+		B80AD3EE2B599AC400B2C04E /* Intel_x86_80186_UI.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80AD3ED2B599AC400B2C04E /* Intel_x86_80186_UI.swift */; };
+		B80AD3F02B59A16C00B2C04E /* VisualEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80AD3EF2B59A16C00B2C04E /* VisualEffect.swift */; };
 		B897F18D2B588A9D0041917F /* AssemblyEmulatorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B897F18C2B588A9D0041917F /* AssemblyEmulatorApp.swift */; };
 		B897F18F2B588A9D0041917F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B897F18E2B588A9D0041917F /* ContentView.swift */; };
 		B897F1912B588A9E0041917F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B897F1902B588A9E0041917F /* Assets.xcassets */; };
 		B897F1942B588A9E0041917F /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B897F1932B588A9E0041917F /* Preview Assets.xcassets */; };
+		B897F19D2B588C400041917F /* Registres.swift in Sources */ = {isa = PBXBuildFile; fileRef = B897F19C2B588C400041917F /* Registres.swift */; };
+		B897F19F2B58903F0041917F /* Instructions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B897F19E2B58903F0041917F /* Instructions.swift */; };
+		B897F1A12B5891650041917F /* Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = B897F1A02B5891650041917F /* Parser.swift */; };
+		B897F1A32B5897700041917F /* Interpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B897F1A22B5897700041917F /* Interpreter.swift */; };
+		B897F1A52B58A2000041917F /* Console.swift in Sources */ = {isa = PBXBuildFile; fileRef = B897F1A42B58A2000041917F /* Console.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B80AD3EB2B599A1500B2C04E /* Enum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enum.swift; sourceTree = "<group>"; };
+		B80AD3ED2B599AC400B2C04E /* Intel_x86_80186_UI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Intel_x86_80186_UI.swift; sourceTree = "<group>"; };
+		B80AD3EF2B59A16C00B2C04E /* VisualEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEffect.swift; sourceTree = "<group>"; };
 		B897F1892B588A9D0041917F /* AssemblyEmulator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AssemblyEmulator.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B897F18C2B588A9D0041917F /* AssemblyEmulatorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssemblyEmulatorApp.swift; sourceTree = "<group>"; };
 		B897F18E2B588A9D0041917F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		B897F1902B588A9E0041917F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B897F1932B588A9E0041917F /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		B897F1952B588A9E0041917F /* AssemblyEmulator.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AssemblyEmulator.entitlements; sourceTree = "<group>"; };
+		B897F19C2B588C400041917F /* Registres.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Registres.swift; sourceTree = "<group>"; };
+		B897F19E2B58903F0041917F /* Instructions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instructions.swift; sourceTree = "<group>"; };
+		B897F1A02B5891650041917F /* Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Parser.swift; sourceTree = "<group>"; };
+		B897F1A22B5897700041917F /* Interpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Interpreter.swift; sourceTree = "<group>"; };
+		B897F1A42B58A2000041917F /* Console.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Console.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,8 +68,12 @@
 		B897F18B2B588A9D0041917F /* AssemblyEmulator */ = {
 			isa = PBXGroup;
 			children = (
+				B897F19B2B588AF90041917F /* Intel_80186 */,
+				B80AD3EB2B599A1500B2C04E /* Enum.swift */,
 				B897F18C2B588A9D0041917F /* AssemblyEmulatorApp.swift */,
 				B897F18E2B588A9D0041917F /* ContentView.swift */,
+				B897F1A42B58A2000041917F /* Console.swift */,
+				B80AD3EF2B59A16C00B2C04E /* VisualEffect.swift */,
 				B897F1902B588A9E0041917F /* Assets.xcassets */,
 				B897F1952B588A9E0041917F /* AssemblyEmulator.entitlements */,
 				B897F1922B588A9E0041917F /* Preview Content */,
@@ -67,6 +87,18 @@
 				B897F1932B588A9E0041917F /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		B897F19B2B588AF90041917F /* Intel_80186 */ = {
+			isa = PBXGroup;
+			children = (
+				B897F19C2B588C400041917F /* Registres.swift */,
+				B897F19E2B58903F0041917F /* Instructions.swift */,
+				B897F1A02B5891650041917F /* Parser.swift */,
+				B897F1A22B5897700041917F /* Interpreter.swift */,
+				B80AD3ED2B599AC400B2C04E /* Intel_x86_80186_UI.swift */,
+			);
+			path = Intel_80186;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -105,7 +137,7 @@
 				};
 			};
 			buildConfigurationList = B897F1842B588A9D0041917F /* Build configuration list for PBXProject "AssemblyEmulator" */;
-			compatibilityVersion = "Xcode 14.0";
+			compatibilityVersion = "Xcode 15.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -139,7 +171,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B897F1A32B5897700041917F /* Interpreter.swift in Sources */,
 				B897F18F2B588A9D0041917F /* ContentView.swift in Sources */,
+				B80AD3F02B59A16C00B2C04E /* VisualEffect.swift in Sources */,
+				B80AD3EC2B599A1500B2C04E /* Enum.swift in Sources */,
+				B897F19D2B588C400041917F /* Registres.swift in Sources */,
+				B897F1A52B58A2000041917F /* Console.swift in Sources */,
+				B80AD3EE2B599AC400B2C04E /* Intel_x86_80186_UI.swift in Sources */,
+				B897F1A12B5891650041917F /* Parser.swift in Sources */,
+				B897F19F2B58903F0041917F /* Instructions.swift in Sources */,
 				B897F18D2B588A9D0041917F /* AssemblyEmulatorApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -200,7 +240,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.2;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -257,7 +297,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.2;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -279,11 +319,13 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = be.pieteraerens.AssemblyEmulator;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -306,11 +348,13 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = be.pieteraerens.AssemblyEmulator;
 				PRODUCT_NAME = "$(TARGET_NAME)";
