@@ -9,11 +9,14 @@ import Foundation
 
 
 struct Instruction {
+    let id = UUID().uuidString
     let opcode: OpCode
     let operands: [Operand]
+    let lineNumber: Int
+    let lineValue: String
 }
 
-enum OpCode {
+enum OpCode: String, CaseIterable {
 //    Transfer
     case mov
     
@@ -34,6 +37,12 @@ enum OpCode {
     
 //    Stop
     case hlt
+}
+
+extension OpCode{
+    static func values() -> [String]{
+        return self.allCases.map { $0.rawValue }
+    }
 }
 
 enum Operand: Equatable {

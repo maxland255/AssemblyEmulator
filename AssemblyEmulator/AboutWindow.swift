@@ -35,11 +35,17 @@ struct AboutWindow: View {
                         
                 Spacer()
                         
-                HStack(spacing: 5) {
+                HStack(spacing: 10) {
                     Button {
                         openURL(URL(string: "https://pieteraerens.eu")!)
                     } label: {
                         Text("WebSite")
+                    }
+                    
+                    Button {
+                        openURL(URL(string: "https://github.com/maxland255/AssemblyEmulator/blob/main/LICENCE")!)
+                    } label: {
+                        Text("Licence")
                     }
                 
                     Spacer()

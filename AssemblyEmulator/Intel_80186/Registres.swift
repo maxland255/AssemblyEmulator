@@ -9,7 +9,8 @@ import Foundation
 import SwiftUI
 
 
-struct Register: Hashable {
+struct Register: Hashable, Identifiable {
+    let id = UUID().uuidString
     let type: X86Register
     let size: RegisterSize
     var value: RegisterValue
@@ -42,23 +43,38 @@ struct Register: Hashable {
         }
     }
     
-    static func getRegisterValue(_ register: X86Register, _ value: Int) -> RegisterValue {
+    static func getRegisterValue(_ register: X86Register, _ value: Int) -> RegisterValue? {
         switch register {
         // 16-bit registers
         case .ax, .bx, .cx, .dx, .si, .di, .bp, .sp,
                 .cs, .ds, .ss, .es, .fs, .gs,
                 .siIndex, .diIndex, .ip, .flags, .cr0:
-        return .int16(Int16(value))
+            if value <= Int16.max && value >= Int16.min{
+                return .int16(Int16(value))
+            }else{
+                ConsoleLine.shared.appendLine("Asm Intel x86", "\(value <= Int16.max ? "Underflow" : "Overflow") for \(register.rawValue) detected (value: \(String(value, radix: 16))), max value allowed: \(String(Int16.max, radix: 16)) and min valued allowed: \(String(Int16.min, radix: 16))", color: .red)
+                return nil
+            }
                 
         // 32-bit registers
         case .eax, .ebx, .ecx, .edx, .esi, .edi, .ebp, .esp,
                 .esiIndex32, .ediIndex32, .eip, .eflags:
-        return .int32(Int32(value))
+            if value <= Int32.max && value >= Int32.min{
+                return .int32(Int32(value))
+            }else{
+                ConsoleLine.shared.appendLine("Asm Intel x86", "\(value <= Int32.max ? "Underflow" : "Overflow") for \(register.rawValue) detected (value: \(String(value, radix: 16))), max value allowed: \(String(Int32.max, radix: 16)) and min valued allowed: \(String(Int32.min, radix: 16))", color: .red)
+                return nil
+            }
             
         // 64-bit registers
         case .rax, .rbx, .rcx, .rdx, .rsi, .rdi, .rbp, .rsp,
                 .rsiIndex64, .rdiIndex64, .rip, .rflags:
-        return .int64(Int64(value))
+            if value <= Int64.max && value >= Int64.min{
+                return .int64(Int64(value))
+            }else{
+                ConsoleLine.shared.appendLine("Asm Intel x86", "\(value <= Int64.max ? "Underflow" : "Overflow") for \(register.rawValue) detected (value: \(String(value, radix: 16))), max value allowed: \(String(Int64.max, radix: 16)) and min valued allowed: \(String(Int64.min, radix: 16))", color: .red)
+                return nil
+            }
         }
     }
 }
@@ -89,7 +105,7 @@ extension RegisterValue {
     }
 }
 
-enum X86Register: String, Hashable {
+enum X86Register: String, Hashable, CaseIterable {
     // 16-bit general registers
     case ax, bx, cx, dx, si, di, bp, sp
     
@@ -125,29 +141,103 @@ enum X86Register: String, Hashable {
 }
 
 
+extension X86Register{
+    static func values() -> [String]{
+        return self.allCases.map { $0.rawValue }
+    }
+}
+
+
 struct RegisterView: View {
     
     var registers: [Register]
     
+    @State var viewWidth: CGFloat = 200
+    @State var selectedRegister: Register?
+    
     var body: some View {
-        VStack(alignment: .leading) {
-            HStack {
-                Text("Registers")
-                    .font(.title)
-                
-                Spacer()
-            }.padding(.top, 7.5)
+        HStack(spacing: 0) {
+            Divider()
+                .frame(width: 2)
+                .onHover(perform: { hovered in
+                    if hovered{
+                        NSCursor.resizeLeftRight.push()
+                    }else{
+                        NSCursor.resizeLeftRight.pop()
+                    }
+                })
+                .gesture(
+                    DragGesture(minimumDistance: 10)
+                        .onChanged({ value in
+                            let width = CGFloat(integerLiteral: Int(value.translation.width))
+                                                        
+                            if viewWidth - width >= 200 && viewWidth - width <= 400{
+                                viewWidth -= width
+                            }
+                        })
+                )
             
-            ScrollView {
-                ForEach(registers.sorted(by: { $0.type.rawValue < $1.type.rawValue }), id: \.type) { register in
-                    HStack {
-                        Text("\(register.type.rawValue) (\(register.size.rawValue) bits): \(String(register.value.value(), radix: 16, uppercase: true)) (\(register.value.value()))")
-                            .padding(.bottom, 2.5)
-                        
-                        Spacer()
+            VStack(alignment: .leading) {
+                HStack {
+                    Text("Registers")
+                        .font(.title)
+                    
+                    Spacer()
+                }.padding(.top, 7.5)
+                
+                ScrollView {
+                    ForEach(registers.sorted(by: { $0.type.rawValue < $1.type.rawValue }), id: \.type) { register in
+                        HStack {
+                            Text("\(register.type.rawValue.uppercased()) (\(register.size.rawValue) bits): \(String(register.value.value(), radix: 16, uppercase: true)) (\(register.value.value()))")
+                                .padding(.bottom, 2.5)
+                                .onTapGesture {
+                                    self.selectedRegister = register
+                                }
+                            
+                            Spacer()
+                        }
+                    }
+                }.sheet(item: $selectedRegister) { register in
+                    RegisterDetails(register: register)
+                }
+            }.padding(.leading)
+        }.frame(width: viewWidth)
+    }
+}
+
+
+struct RegisterDetails: View {
+    
+    @Environment(\.presentationMode) var presentationMode
+    
+    var register: Register
+    
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 16) {
+                Text(register.type.rawValue.uppercased())
+                    .font(.title2)
+                
+                Text("Register size: \(register.size.rawValue) bits")
+                
+                Text("Binary value: \(String(register.value.value(), radix: 2))")
+                    .textSelection(.enabled)
+                
+                Text("Hexadecimal value: \(String(register.value.value(), radix: 16))")
+                    .textSelection(.enabled)
+                
+                Text("Decimal value: \(register.value.value())")
+                    .textSelection(.enabled)
+            }.padding()
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button {
+                            presentationMode.wrappedValue.dismiss()
+                        } label: {
+                            Text("Cancel")
+                        }
                     }
                 }
-            }
-        }.padding(.leading)
+        }
     }
 }

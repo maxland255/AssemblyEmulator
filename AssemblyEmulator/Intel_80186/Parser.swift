@@ -16,6 +16,8 @@ class Asm80186Parser {
 //        Divides source code online
         let lines = sourceCode.components(separatedBy: .newlines)
         
+        var linesRemoved = lines
+        
         for line in lines {
 //            Ignore comment
             guard !line.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix(";") else {
@@ -31,17 +33,24 @@ class Asm80186Parser {
             }
             
             let opCodeString = components[0]
-            let operands = Array(components.dropFirst())
+            let operands = Array(components.dropFirst().joined(separator: "").components(separatedBy: ",").filter { !$0.isEmpty })
             
             if let opCode = parseOpCode(opCodeString) {
                 if let parsedOperands = parseOperands(operands) {
-                    let instruction = Instruction(opcode: opCode, operands: parsedOperands)
+                    let lineIndex = linesRemoved.firstIndex(of: line)
+                    
+                    let instruction = Instruction(opcode: opCode, operands: parsedOperands, lineNumber: (lineIndex ?? -1) + 1, lineValue: line)
+                    
+                    if let lineIndex = lineIndex{
+                        linesRemoved[lineIndex] += Date().ISO8601Format()
+                    }
+                    
                     instructions.append(instruction)
                 }else{
                     return []
                 }
             }else{
-                ConsoleLine.shared.appendLine("Asm 80186 x86", "Error to parse instruction: \(line)", color: .red)
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Error to parse instruction: \(line)", color: .red)
                 return []
             }
         }
@@ -93,18 +102,28 @@ class Asm80186Parser {
         var operands = [Operand]()
         
         for operand in operandsString {
-            if let register = X86Register(rawValue: operand){
+            if let register = X86Register(rawValue: operand.lowercased()){
                 operands.append(.register(register))
-            }else if let immediateValue = Int(operand, radix: 16){
+            }else if let immediateValue = getImmediateValue(operand){
                 operands.append(.immediate(immediateValue))
             }else if operand.hasPrefix("[") && operand.hasSuffix("]") {
                 operands.append(.memory(operand))
             }else{
-                ConsoleLine.shared.appendLine("Asm 80186 x86", "Error to parse operand: \(operand)", color: .red)
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Error to parse operand: \(operand)", color: .red)
                 return nil
             }
         }
         
         return operands
+    }
+    
+    private func getImmediateValue(_ value: String) -> Int?{
+        if value.hasSuffix("b"){
+            return Int(value.dropLast(), radix: 2)
+        }else if value.hasSuffix("h"){
+            return Int(value.dropLast(), radix: 16)
+        }else{
+            return Int(value)
+        }
     }
 }

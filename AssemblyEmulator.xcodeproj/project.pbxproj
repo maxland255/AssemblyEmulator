@@ -11,6 +11,8 @@
 		B80AD3EE2B599AC400B2C04E /* Intel_x86_80186_UI.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80AD3ED2B599AC400B2C04E /* Intel_x86_80186_UI.swift */; };
 		B80AD3F02B59A16C00B2C04E /* VisualEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80AD3EF2B59A16C00B2C04E /* VisualEffect.swift */; };
 		B80AD3F22B59CD4500B2C04E /* AboutWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80AD3F12B59CD4500B2C04E /* AboutWindow.swift */; };
+		B849305E2B5B1A4700404DF1 /* CodeEditorView in Frameworks */ = {isa = PBXBuildFile; productRef = B849305D2B5B1A4700404DF1 /* CodeEditorView */; };
+		B84930602B5B1A4700404DF1 /* LanguageSupport in Frameworks */ = {isa = PBXBuildFile; productRef = B849305F2B5B1A4700404DF1 /* LanguageSupport */; };
 		B897F18D2B588A9D0041917F /* AssemblyEmulatorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B897F18C2B588A9D0041917F /* AssemblyEmulatorApp.swift */; };
 		B897F18F2B588A9D0041917F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B897F18E2B588A9D0041917F /* ContentView.swift */; };
 		B897F1912B588A9E0041917F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B897F1902B588A9E0041917F /* Assets.xcassets */; };
@@ -45,6 +47,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B84930602B5B1A4700404DF1 /* LanguageSupport in Frameworks */,
+				B849305E2B5B1A4700404DF1 /* CodeEditorView in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -120,6 +124,10 @@
 			dependencies = (
 			);
 			name = AssemblyEmulator;
+			packageProductDependencies = (
+				B849305D2B5B1A4700404DF1 /* CodeEditorView */,
+				B849305F2B5B1A4700404DF1 /* LanguageSupport */,
+			);
 			productName = AssemblyEmulator;
 			productReference = B897F1892B588A9D0041917F /* AssemblyEmulator.app */;
 			productType = "com.apple.product-type.application";
@@ -148,6 +156,9 @@
 				Base,
 			);
 			mainGroup = B897F1802B588A9D0041917F;
+			packageReferences = (
+				B849305C2B5B1A4700404DF1 /* XCRemoteSwiftPackageReference "CodeEditorView" */,
+			);
 			productRefGroup = B897F18A2B588A9D0041917F /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -322,6 +333,7 @@
 				DEVELOPMENT_TEAM = X5Q3K755Z9;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				EXCLUDED_ARCHS = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = AssemblyEmulator;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
@@ -352,6 +364,7 @@
 				DEVELOPMENT_TEAM = X5Q3K755Z9;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				EXCLUDED_ARCHS = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = AssemblyEmulator;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
@@ -391,6 +404,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B849305C2B5B1A4700404DF1 /* XCRemoteSwiftPackageReference "CodeEditorView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mchakravarty/CodeEditorView.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.12.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B849305D2B5B1A4700404DF1 /* CodeEditorView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B849305C2B5B1A4700404DF1 /* XCRemoteSwiftPackageReference "CodeEditorView" */;
+			productName = CodeEditorView;
+		};
+		B849305F2B5B1A4700404DF1 /* LanguageSupport */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B849305C2B5B1A4700404DF1 /* XCRemoteSwiftPackageReference "CodeEditorView" */;
+			productName = LanguageSupport;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B897F1812B588A9D0041917F /* Project object */;
 }

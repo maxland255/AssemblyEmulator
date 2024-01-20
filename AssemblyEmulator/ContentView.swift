@@ -28,7 +28,7 @@ struct ContentView: View {
                     ForEach(EmulatorType.allCases, id: \.self) { emulator in
                         Button(emulator.rawValue) {
                             emulatorType = emulator
-                        }
+                        }.disabled(emulator == emulatorType)
                     }
                 } label: {
                     Text(emulatorType.rawValue)

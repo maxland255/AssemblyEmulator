@@ -10,78 +10,118 @@ import Foundation
 
 class Asm80186Interpreter: ObservableObject {
     @Published var registers = [X86Register:Register]()
+    @Published var stepNumber: UInt = 0
+    @Published var maximumStep: Int = 0
+    @Published var runed = false
+    @Published var currentInstruction: Instruction?
+    
     var strict: Bool = false
+    var instructions = [Instruction]()
     
     func interpret(_ instructions: [Instruction], strict: Bool = false) {
         self.strict = strict
+        self.runed = true
         
         for instruction in instructions {
-            switch instruction.opcode {
-//                Transfer
-            case .mov:
-                if !executeMov(instruction){
-                    ConsoleLine.shared.appendLine("Asm 80186 x86", "Stopping...", color: .red)
-                    return
-                }
-                
-//                Arithmetic
-            case .add:
-                if !executeAddSub(instruction){
-                    ConsoleLine.shared.appendLine("Asm 80186 x86", "Stopping...", color: .red)
-                    return
-                }
-            case .sub:
-                if !executeAddSub(instruction, add: false){
-                    ConsoleLine.shared.appendLine("Asm 80186 x86", "Stopping...", color: .red)
-                    return
-                }
-            case .div:
-                if !executeMulDiv(instruction, mul: false){
-                    ConsoleLine.shared.appendLine("Asm 80186 x86", "Stopping...", color: .red)
-                    return
-                }
-            case .mul:
-                if !executeMulDiv(instruction){
-                    ConsoleLine.shared.appendLine("Asm 80186 x86", "Stopping...", color: .red)
-                    return
-                }
-            case .inc:
-                if !executeIncDec(instruction){
-                    ConsoleLine.shared.appendLine("Asm 80186 x86", "Stopping...", color: .red)
-                    return
-                }
-            case .dec:
-                if !executeIncDec(instruction, inc: false){
-                    ConsoleLine.shared.appendLine("Asm 80186 x86", "Stopping...", color: .red)
-                    return
-                }
-                
-//                Logic
-            case .neg:
-                if !executeNeg(instruction){
-                    ConsoleLine.shared.appendLine("Asm 80186 x86", "Stopping...", color: .red)
-                    return
-                }
-            case .not:
-                if !executeNot(instruction){
-                    ConsoleLine.shared.appendLine("Asm 80186 x86", "Stopping...", color: .red)
-                    return
-                }
-            case .and:
-                continue
-            case .or:
-                continue
-            case .xor:
-                continue
+            let result_execute = self.executeInstruction(instruction)
             
-//                Stop
-            case .hlt:
-                ConsoleLine.shared.appendLine("Asm 80186 x86", "Stopping...", color: .green)
+            if result_execute == nil{
+                return
+            }else if result_execute == false{
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Stopping...", color: .red)
                 return
             }
         }
         
-        ConsoleLine.shared.appendLine("Asm 80186 x86", "Stopping...", color: .green)
+        ConsoleLine.shared.appendLine("Asm Intel x86", "Stopping...", color: .green)
+        self.runed = false
+    }
+    
+    ///
+    ///Run interpreter step by step
+    ///
+    func interpretStepByStep(_ instructions: [Instruction]?, strict: Bool? = nil, index: UInt = 0) -> Bool?{
+        if let strict = strict{
+            self.strict = strict
+        }
+        
+        self.runed = true
+        self.stepNumber = index
+        
+        if instructions == nil && self.instructions.isEmpty{
+            self.runed = false
+            return false
+        }else if let instructions = instructions{
+            self.maximumStep = instructions.count - 1
+            self.instructions = instructions
+            
+            if index >= self.maximumStep{
+                return false
+            }
+        }
+                
+        for instruction in instructions ?? self.instructions {
+            if ((instructions ?? self.instructions).firstIndex(where: { $0.id == instruction.id }))! <= index{
+                let result_execute = self.executeInstruction(instruction)
+                
+                self.currentInstruction = instruction
+                
+                if result_execute == nil{
+                    return nil
+                }else if result_execute == false{
+                    ConsoleLine.shared.appendLine("Asm Intel x86", "Stopping...", color: .red)
+                    return false
+                }
+            }else{
+                return true
+            }
+        }
+        
+        if index > self.maximumStep{
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Stopping...", color: .green)
+            return nil
+        }else{
+            return true
+        }
+    }
+    
+    private func executeInstruction(_ instruction: Instruction) -> Bool?{
+        switch instruction.opcode {
+//                Transfer
+        case .mov:
+            return executeMov(instruction)
+            
+//                Arithmetic
+        case .add:
+            return executeAddSub(instruction)
+        case .sub:
+            return executeAddSub(instruction, add: false)
+        case .div:
+            return executeMulDiv(instruction, mul: false)
+        case .mul:
+            return executeMulDiv(instruction)
+        case .inc:
+            return executeIncDec(instruction)
+        case .dec:
+            return executeIncDec(instruction, inc: false)
+            
+//                Logic
+        case .neg:
+            return executeNeg(instruction)
+        case .not:
+            return executeNot(instruction)
+        case .and:
+            return true
+        case .or:
+            return true
+        case .xor:
+            return true
+        
+//                Stop
+        case .hlt:
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Stopping...", color: .green)
+            return nil
+        }
     }
     
     
@@ -89,7 +129,7 @@ class Asm80186Interpreter: ObservableObject {
     private func executeMov(_ instruction: Instruction) -> Bool {
         guard instruction.operands.count == 2 else {
 //            Error
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "Instruction \(instruction.opcode) require 2 arguments", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode) require 2 arguments", color: .red)
             return false
         }
         
@@ -104,16 +144,16 @@ class Asm80186Interpreter: ObservableObject {
                 return executeRegister(register)
             }else{
 //                Error
-                ConsoleLine.shared.appendLine("Asm 80186 x86", "Register \(registerType.rawValue) does not exist", color: .red)
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerType.rawValue) does not exist", color: .red)
                 return false
             }
         case .memory(_):
 //            Error
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "Memory is not supported", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
             return false
         default:
 //            Error
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "Operand not supported", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Operand not supported", color: .red)
             return false
         }
         
@@ -124,30 +164,35 @@ class Asm80186Interpreter: ObservableObject {
                 
                 if !result{
     //                Error
-                    ConsoleLine.shared.appendLine("Asm 80186 x86", "Register \(registerType.rawValue) does not exist", color: .red)
+                    ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerType.rawValue) does not exist", color: .red)
                     return false
                 }
                 
                 if let registerValue =  self.registers.first(where: { $0.key == registerType })?.value{
-                    let newRegisterValue = Register.getRegisterValue(registerDest.type, convertRegisterValue(registerValue.value))
-                    let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
-                    self.registers.updateValue(newRegister, forKey: registerDest.type)
+                    if let newRegisterValue = Register.getRegisterValue(registerDest.type, convertRegisterValue(registerValue.value)){
+                        let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
+                        self.registers.updateValue(newRegister, forKey: registerDest.type)
+                    }else{
+                        return false
+                    }
                 }else{
 //                    Error
-                    ConsoleLine.shared.appendLine("Asm 80186 x86", "Register \(registerType.rawValue) does not exist", color: .red)
+                    ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerType.rawValue) does not exist", color: .red)
                     return false
                 }
                 
             case .immediate(let value):
-                let registerValue = Register.getRegisterValue(registerDest.type, value)
-                
-                let register = Register(type: registerDest.type, size: registerDest.size, value: registerValue)
-                
-                self.registers.updateValue(register, forKey: registerDest.type)
+                if let registerValue = Register.getRegisterValue(registerDest.type, value){
+                    let register = Register(type: registerDest.type, size: registerDest.size, value: registerValue)
+                    
+                    self.registers.updateValue(register, forKey: registerDest.type)
+                }else{
+                    return false
+                }
                 
             case .memory(_):
 //                Error
-                ConsoleLine.shared.appendLine("Asm 80186 x86", "Memory is not supported", color: .red)
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
                 return false
             }
             
@@ -158,7 +203,7 @@ class Asm80186Interpreter: ObservableObject {
     private func executeAddSub(_ instruction: Instruction, add: Bool = true) -> Bool {
         guard instruction.operands.count == 2 else {
 //            Error
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "Instruction \(instruction.opcode) require 2 arguments", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode) require 2 arguments", color: .red)
             return false
         }
         
@@ -173,14 +218,14 @@ class Asm80186Interpreter: ObservableObject {
                 return executeRegister(register)
             }else{
 //                Error
-                ConsoleLine.shared.appendLine("Asm 80186 x86", "Register \(registerTypeDest.rawValue) does not exist", color: .red)
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerTypeDest.rawValue) does not exist", color: .red)
                 return false
             }
         case .immediate(_):
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "The first argument only accept register", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "The first argument only accept register", color: .red)
             return false
         case .memory(_):
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "Memory is not supported", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
             return false
         }
         
@@ -192,20 +237,23 @@ class Asm80186Interpreter: ObservableObject {
                 
                 if !result{
     //                Error
-                    ConsoleLine.shared.appendLine("Asm 80186 x86", "Register \(registerType.rawValue) does not exist", color: .red)
+                    ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerType.rawValue) does not exist", color: .red)
                     return false
                 }
                 
                 if let registerValue =  self.registers.first(where: { $0.key == registerType })?.value {
-                    let resultAdd = self.convertRegisterValue(registerDest.value) + self.convertRegisterValue(registerValue.value)
-                    let resultSub = self.convertRegisterValue(registerDest.value) - self.convertRegisterValue(registerValue.value)
+                    let resultAdd = add ? self.convertRegisterValue(registerDest.value) + self.convertRegisterValue(registerValue.value) : 0
+                    let resultSub = add ? 0 : self.convertRegisterValue(registerDest.value) - self.convertRegisterValue(registerValue.value)
                     
-                    let newRegisterValue = Register.getRegisterValue(registerDest.type, add ? resultAdd : resultSub)
-                    let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
-                    self.registers.updateValue(newRegister, forKey: registerDest.type)
+                    if let newRegisterValue = Register.getRegisterValue(registerDest.type, add ? resultAdd : resultSub){
+                        let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
+                        self.registers.updateValue(newRegister, forKey: registerDest.type)
+                    }else{
+                        return false
+                    }
                     
                 }else{
-                    ConsoleLine.shared.appendLine("Asm 80186 x86", "Register \(registerType.rawValue) does not exist", color: .red)
+                    ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerType.rawValue) does not exist", color: .red)
                     return false
                 }
                 
@@ -213,12 +261,15 @@ class Asm80186Interpreter: ObservableObject {
                 let resultAdd = self.convertRegisterValue(registerDest.value) + value
                 let resultSub = self.convertRegisterValue(registerDest.value) - value
                 
-                let newRegisterValue = Register.getRegisterValue(registerDest.type, add ? resultAdd : resultSub)
-                let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
-                self.registers.updateValue(newRegister, forKey: registerDest.type)
+                if let newRegisterValue = Register.getRegisterValue(registerDest.type, add ? resultAdd : resultSub){
+                    let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
+                    self.registers.updateValue(newRegister, forKey: registerDest.type)
+                }else{
+                    return false
+                }
                 
             case .memory(_):
-                ConsoleLine.shared.appendLine("Asm 80186 x86", "Memory is not supported", color: .red)
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
                 return false
             }
             
@@ -230,7 +281,7 @@ class Asm80186Interpreter: ObservableObject {
     private func executeMulDiv(_ instruction: Instruction, mul: Bool = true) -> Bool {
         guard instruction.operands.count == 2 else {
 //            Error
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "Instruction \(instruction.opcode) require 2 arguments", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode) require 2 arguments", color: .red)
             return false
         }
         
@@ -245,14 +296,14 @@ class Asm80186Interpreter: ObservableObject {
                 return executeRegister(register)
             }else{
 //                Error
-                ConsoleLine.shared.appendLine("Asm 80186 x86", "Register \(registerTypeDest.rawValue) does not exist", color: .red)
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerTypeDest.rawValue) does not exist", color: .red)
                 return false
             }
         case .immediate(_):
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "The first argument only accept register", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "The first argument only accept register", color: .red)
             return false
         case .memory(_):
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "Memory is not supported", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
             return false
         }
         
@@ -264,7 +315,7 @@ class Asm80186Interpreter: ObservableObject {
                 
                 if !result{
     //                Error
-                    ConsoleLine.shared.appendLine("Asm 80186 x86", "Register \(registerType.rawValue) does not exist", color: .red)
+                    ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerType.rawValue) does not exist", color: .red)
                     return false
                 }
                 
@@ -272,25 +323,36 @@ class Asm80186Interpreter: ObservableObject {
                     let resultMul = self.convertRegisterValue(registerDest.value) * self.convertRegisterValue(registerValue.value)
                     let resultDiv = self.convertRegisterValue(registerDest.value) / self.convertRegisterValue(registerValue.value)
                     
-                    let newRegisterValue = Register.getRegisterValue(registerDest.type, mul ? resultMul : resultDiv)
-                    let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
-                    self.registers.updateValue(newRegister, forKey: registerDest.type)
+                    if let newRegisterValue = Register.getRegisterValue(registerDest.type, mul ? resultMul : resultDiv){
+                        let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
+                        self.registers.updateValue(newRegister, forKey: registerDest.type)
+                    }else{
+                        return false
+                    }
                     
                 }else{
-                    ConsoleLine.shared.appendLine("Asm 80186 x86", "Register \(registerType.rawValue) does not exist", color: .red)
+                    ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerType.rawValue) does not exist", color: .red)
                     return false
                 }
                 
             case .immediate(let value):
-                let resultMul = self.convertRegisterValue(registerDest.value) * value
-                let resultDiv = self.convertRegisterValue(registerDest.value) / value
+                let resultMul = mul ? self.convertRegisterValue(registerDest.value) * value : 0
+                let resultDiv = mul ? 0 : (value == 0 ? nil : self.convertRegisterValue(registerDest.value) / value)
                 
-                let newRegisterValue = Register.getRegisterValue(registerDest.type, mul ? resultMul : resultDiv)
-                let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
-                self.registers.updateValue(newRegister, forKey: registerDest.type)
+                if resultDiv == nil{
+                    ConsoleLine.shared.appendLine("Asm Intel x86", "Division by 0 is not allowed", color: .red)
+                    return false
+                }
+                
+                if let newRegisterValue = Register.getRegisterValue(registerDest.type, mul ? resultMul : resultDiv!){
+                    let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
+                    self.registers.updateValue(newRegister, forKey: registerDest.type)
+                }else{
+                    return false
+                }
                 
             case .memory(_):
-                ConsoleLine.shared.appendLine("Asm 80186 x86", "Memory is not supported", color: .red)
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
                 return false
             }
             
@@ -302,7 +364,7 @@ class Asm80186Interpreter: ObservableObject {
     private func executeIncDec(_ instruction: Instruction, inc: Bool = true) -> Bool {
         guard instruction.operands.count == 1 else {
 //            Error
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "Instruction \(instruction.opcode) require 1 arguments", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode) require 1 arguments", color: .red)
             return false
         }
         
@@ -316,14 +378,14 @@ class Asm80186Interpreter: ObservableObject {
                 return executeRegister(register)
             }else{
 //                Error
-                ConsoleLine.shared.appendLine("Asm 80186 x86", "Register \(registerTypeDest.rawValue) does not exist", color: .red)
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerTypeDest.rawValue) does not exist", color: .red)
                 return false
             }
         case .immediate(_):
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "The first argument only accept register", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "The first argument only accept register", color: .red)
             return false
         case .memory(_):
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "Memory is not supported", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
             return false
         }
         
@@ -331,9 +393,12 @@ class Asm80186Interpreter: ObservableObject {
             let resultInc = self.convertRegisterValue(registerDest.value) + 1
             let resultDec = self.convertRegisterValue(registerDest.value) - 1
             
-            let newRegisterValue = Register.getRegisterValue(registerDest.type, inc ? resultInc : resultDec)
-            let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
-            self.registers.updateValue(newRegister, forKey: registerDest.type)
+            if let newRegisterValue = Register.getRegisterValue(registerDest.type, inc ? resultInc : resultDec){
+                let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
+                self.registers.updateValue(newRegister, forKey: registerDest.type)
+            }else{
+                return false
+            }
             
             return true
         }
@@ -341,11 +406,11 @@ class Asm80186Interpreter: ObservableObject {
     
     
     private func executeNot(_ instruction: Instruction) -> Bool {
-        ConsoleLine.shared.appendLine("Asm 80186 x86", "WARNING: NOT is not functionnal for the moment", color: .orange)
+        ConsoleLine.shared.appendLine("Asm Intel x86", "WARNING: NOT is not functionnal for the moment", color: .orange)
         
         guard instruction.operands.count == 1 else {
 //            Error
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "Instruction \(instruction.opcode) require 1 arguments", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode) require 1 arguments", color: .red)
             return false
         }
         
@@ -359,14 +424,14 @@ class Asm80186Interpreter: ObservableObject {
                 return executeRegister(register)
             }else{
 //                Error
-                ConsoleLine.shared.appendLine("Asm 80186 x86", "Register \(registerTypeDest.rawValue) does not exist", color: .red)
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerTypeDest.rawValue) does not exist", color: .red)
                 return false
             }
         case .immediate(_):
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "The first argument only accept register", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "The first argument only accept register", color: .red)
             return false
         case .memory(_):
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "Memory is not supported", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
             return false
         }
         
@@ -382,9 +447,12 @@ class Asm80186Interpreter: ObservableObject {
                 result = Int(~int64)
             }
             
-            let newRegisterValue = Register.getRegisterValue(registerDest.type, result)
-            let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
-            self.registers.updateValue(newRegister, forKey: registerDest.type)
+            if let newRegisterValue = Register.getRegisterValue(registerDest.type, result){
+                let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
+                self.registers.updateValue(newRegister, forKey: registerDest.type)
+            }else{
+                return false
+            }
             
             return true
         }
@@ -394,7 +462,7 @@ class Asm80186Interpreter: ObservableObject {
     private func executeNeg(_ instruction: Instruction) -> Bool {
         guard instruction.operands.count == 1 else {
 //            Error
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "Instruction \(instruction.opcode) require 1 arguments", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode) require 1 arguments", color: .red)
             return false
         }
         
@@ -408,14 +476,14 @@ class Asm80186Interpreter: ObservableObject {
                 return executeRegister(register)
             }else{
 //                Error
-                ConsoleLine.shared.appendLine("Asm 80186 x86", "Register \(registerTypeDest.rawValue) does not exist", color: .red)
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerTypeDest.rawValue) does not exist", color: .red)
                 return false
             }
         case .immediate(_):
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "The first argument only accept register", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "The first argument only accept register", color: .red)
             return false
         case .memory(_):
-            ConsoleLine.shared.appendLine("Asm 80186 x86", "Memory is not supported", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
             return false
         }
         
@@ -431,9 +499,12 @@ class Asm80186Interpreter: ObservableObject {
                 result = Int(0-int64)
             }
             
-            let newRegisterValue = Register.getRegisterValue(registerDest.type, result)
-            let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
-            self.registers.updateValue(newRegister, forKey: registerDest.type)
+            if let newRegisterValue = Register.getRegisterValue(registerDest.type, result){
+                let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
+                self.registers.updateValue(newRegister, forKey: registerDest.type)
+            }else{
+                return false
+            }
             
             return true
         }
