@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 
 class Asm80186Interpreter: ObservableObject {
@@ -29,6 +30,7 @@ class Asm80186Interpreter: ObservableObject {
                 return
             }else if result_execute == false{
                 ConsoleLine.shared.appendLine("Asm Intel x86", "Stopping...", color: .red)
+                self.runed = false
                 return
             }
         }
@@ -56,6 +58,7 @@ class Asm80186Interpreter: ObservableObject {
             self.instructions = instructions
             
             if index >= self.maximumStep{
+                self.runed = false
                 return false
             }
         }
@@ -67,9 +70,11 @@ class Asm80186Interpreter: ObservableObject {
                 self.currentInstruction = instruction
                 
                 if result_execute == nil{
+                    self.runed = false
                     return nil
                 }else if result_execute == false{
                     ConsoleLine.shared.appendLine("Asm Intel x86", "Stopping...", color: .red)
+                    self.runed = false
                     return false
                 }
             }else{
@@ -79,6 +84,7 @@ class Asm80186Interpreter: ObservableObject {
         
         if index > self.maximumStep{
             ConsoleLine.shared.appendLine("Asm Intel x86", "Stopping...", color: .green)
+            self.runed = false
             return nil
         }else{
             return true
@@ -111,11 +117,26 @@ class Asm80186Interpreter: ObservableObject {
         case .not:
             return executeNot(instruction)
         case .and:
-            return true
+            return executeAndOrXor(instruction)
         case .or:
-            return true
+            return executeAndOrXor(instruction, action: .or)
         case .xor:
+            return executeAndOrXor(instruction, action: .xor)
+        case .shl:
+            return executeShlShr(instruction)
+        case .shr:
+            return executeShlShr(instruction, right: true)
+            
+//            Misc
+        case .nop:
+//            NOP operator is an equivalent of pass in Python
             return true
+        case .lea:
+            ConsoleLine.shared.appendLine("Asm Intel x86 (WARNING)", "LEA instruction is not implemented for the moment", color: .orange)
+            return true
+        case .int:
+            ConsoleLine.shared.appendLine("Asm Intel x86", "INT instruction is not supported in \(NSApplication.appName)", color: .red)
+            return false
         
 //                Stop
         case .hlt:
@@ -129,7 +150,7 @@ class Asm80186Interpreter: ObservableObject {
     private func executeMov(_ instruction: Instruction) -> Bool {
         guard instruction.operands.count == 2 else {
 //            Error
-            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode) require 2 arguments", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode.rawValue.uppercased()) require 2 arguments", color: .red)
             return false
         }
         
@@ -203,7 +224,7 @@ class Asm80186Interpreter: ObservableObject {
     private func executeAddSub(_ instruction: Instruction, add: Bool = true) -> Bool {
         guard instruction.operands.count == 2 else {
 //            Error
-            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode) require 2 arguments", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode.rawValue.uppercased()) require 2 arguments", color: .red)
             return false
         }
         
@@ -242,8 +263,8 @@ class Asm80186Interpreter: ObservableObject {
                 }
                 
                 if let registerValue =  self.registers.first(where: { $0.key == registerType })?.value {
-                    let resultAdd = add ? self.convertRegisterValue(registerDest.value) + self.convertRegisterValue(registerValue.value) : 0
-                    let resultSub = add ? 0 : self.convertRegisterValue(registerDest.value) - self.convertRegisterValue(registerValue.value)
+                    let resultAdd = add ? self.convertRegisterValue(registerDest.value) &+ self.convertRegisterValue(registerValue.value) : 0
+                    let resultSub = add ? 0 : self.convertRegisterValue(registerDest.value) &- self.convertRegisterValue(registerValue.value)
                     
                     if let newRegisterValue = Register.getRegisterValue(registerDest.type, add ? resultAdd : resultSub){
                         let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
@@ -258,8 +279,8 @@ class Asm80186Interpreter: ObservableObject {
                 }
                 
             case .immediate(let value):
-                let resultAdd = self.convertRegisterValue(registerDest.value) + value
-                let resultSub = self.convertRegisterValue(registerDest.value) - value
+                let resultAdd = self.convertRegisterValue(registerDest.value) &+ value
+                let resultSub = self.convertRegisterValue(registerDest.value) &- value
                 
                 if let newRegisterValue = Register.getRegisterValue(registerDest.type, add ? resultAdd : resultSub){
                     let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
@@ -281,9 +302,11 @@ class Asm80186Interpreter: ObservableObject {
     private func executeMulDiv(_ instruction: Instruction, mul: Bool = true) -> Bool {
         guard instruction.operands.count == 2 else {
 //            Error
-            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode) require 2 arguments", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode.rawValue.uppercased()) require 2 arguments", color: .red)
             return false
         }
+        
+        ConsoleLine.shared.appendLine("Asm Intel x86 (WARNING)", "Instruction \(instruction.opcode.rawValue.uppercased()) does not represent the true functioning", color: .orange)
         
         let operand1 = instruction.operands[0]
         let operand2 = instruction.operands[1]
@@ -320,7 +343,7 @@ class Asm80186Interpreter: ObservableObject {
                 }
                 
                 if let registerValue =  self.registers.first(where: { $0.key == registerType })?.value {
-                    let resultMul = self.convertRegisterValue(registerDest.value) * self.convertRegisterValue(registerValue.value)
+                    let resultMul = self.convertRegisterValue(registerDest.value) &* self.convertRegisterValue(registerValue.value)
                     let resultDiv = self.convertRegisterValue(registerDest.value) / self.convertRegisterValue(registerValue.value)
                     
                     if let newRegisterValue = Register.getRegisterValue(registerDest.type, mul ? resultMul : resultDiv){
@@ -336,7 +359,7 @@ class Asm80186Interpreter: ObservableObject {
                 }
                 
             case .immediate(let value):
-                let resultMul = mul ? self.convertRegisterValue(registerDest.value) * value : 0
+                let resultMul = mul ? self.convertRegisterValue(registerDest.value) &* value : 0
                 let resultDiv = mul ? 0 : (value == 0 ? nil : self.convertRegisterValue(registerDest.value) / value)
                 
                 if resultDiv == nil{
@@ -364,7 +387,7 @@ class Asm80186Interpreter: ObservableObject {
     private func executeIncDec(_ instruction: Instruction, inc: Bool = true) -> Bool {
         guard instruction.operands.count == 1 else {
 //            Error
-            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode) require 1 arguments", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode.rawValue.uppercased()) require 1 arguments", color: .red)
             return false
         }
         
@@ -390,8 +413,8 @@ class Asm80186Interpreter: ObservableObject {
         }
         
         func executeRegister(_ registerDest: Register) -> Bool {
-            let resultInc = self.convertRegisterValue(registerDest.value) + 1
-            let resultDec = self.convertRegisterValue(registerDest.value) - 1
+            let resultInc = self.convertRegisterValue(registerDest.value) &+ 1
+            let resultDec = self.convertRegisterValue(registerDest.value) &- 1
             
             if let newRegisterValue = Register.getRegisterValue(registerDest.type, inc ? resultInc : resultDec){
                 let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
@@ -406,11 +429,9 @@ class Asm80186Interpreter: ObservableObject {
     
     
     private func executeNot(_ instruction: Instruction) -> Bool {
-        ConsoleLine.shared.appendLine("Asm Intel x86", "WARNING: NOT is not functionnal for the moment", color: .orange)
-        
         guard instruction.operands.count == 1 else {
 //            Error
-            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode) require 1 arguments", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode.rawValue.uppercased()) require 1 arguments", color: .red)
             return false
         }
         
@@ -440,13 +461,25 @@ class Asm80186Interpreter: ObservableObject {
             
             switch registerDest.value {
             case .int16(let int16):
-                result = Int(~int16)
+                if int16 < 0{
+                    ConsoleLine.shared.appendLine("Asm Intel x86", "NOT operator does not accept negative value", color: .red)
+                    return false
+                }
+                result = Int(~UInt16(int16) & ~(1 << 15))
             case .int32(let int32):
-                result = Int(~int32)
+                if int32 < 0{
+                    ConsoleLine.shared.appendLine("Asm Intel x86", "NOT operator does not accept negative value", color: .red)
+                    return false
+                }
+                result = Int(~UInt32(int32) & ~(1 << 31))
             case .int64(let int64):
-                result = Int(~int64)
+                if int64 < 0{
+                    ConsoleLine.shared.appendLine("Asm Intel x86", "NOT operator does not accept negative value", color: .red)
+                    return false
+                }
+                result = Int(~UInt64(int64) & ~(1 << 63))
             }
-            
+                        
             if let newRegisterValue = Register.getRegisterValue(registerDest.type, result){
                 let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
                 self.registers.updateValue(newRegister, forKey: registerDest.type)
@@ -462,7 +495,7 @@ class Asm80186Interpreter: ObservableObject {
     private func executeNeg(_ instruction: Instruction) -> Bool {
         guard instruction.operands.count == 1 else {
 //            Error
-            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode) require 1 arguments", color: .red)
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode.rawValue.uppercased()) require 1 arguments", color: .red)
             return false
         }
         
@@ -503,6 +536,180 @@ class Asm80186Interpreter: ObservableObject {
                 let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
                 self.registers.updateValue(newRegister, forKey: registerDest.type)
             }else{
+                return false
+            }
+            
+            return true
+        }
+    }
+    
+    
+    private func executeAndOrXor(_ instruction: Instruction, action: AndOrXor = .and) -> Bool {
+        guard instruction.operands.count == 2 else {
+//            Error
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode.rawValue.uppercased()) require 2 arguments", color: .red)
+            return false
+        }
+        
+        let operand1 = instruction.operands[0]
+        let operand2 = instruction.operands[1]
+        
+        switch operand1 {
+        case .register(let registerTypeDest):
+            let _ = verifyRegisterExist(registerTypeDest, strict: self.strict)
+            
+            if let register = self.registers.first(where: { $0.key == registerTypeDest })?.value {
+                return executeRegister(register)
+            }else{
+//                Error
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerTypeDest.rawValue) does not exist", color: .red)
+                return false
+            }
+        case .immediate(_):
+            ConsoleLine.shared.appendLine("Asm Intel x86", "The first argument only accept register", color: .red)
+            return false
+        case .memory(_):
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
+            return false
+        }
+        
+        func executeRegister(_ registerDest: Register) -> Bool {
+            switch operand2 {
+                
+            case .register(let registerType):
+                let result = verifyRegisterExist(registerType, strict: self.strict)
+                
+                if !result{
+    //                Error
+                    ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerType.rawValue) does not exist", color: .red)
+                    return false
+                }
+                
+                if let registerValue =  self.registers.first(where: { $0.key == registerType })?.value {
+                    let resultAnd = self.convertRegisterValue(registerDest.value) & self.convertRegisterValue(registerValue.value)
+                    let resultOr = self.convertRegisterValue(registerDest.value) | self.convertRegisterValue(registerValue.value)
+                    let resultXor = self.convertRegisterValue(registerDest.value) ^ self.convertRegisterValue(registerValue.value)
+                    
+                    if let newRegisterValue = Register.getRegisterValue(registerDest.type, action.getValue(resultAnd, resultOr, resultXor)){
+                        let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
+                        self.registers.updateValue(newRegister, forKey: registerDest.type)
+                    }else{
+                        return false
+                    }
+                    
+                }else{
+                    ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerType.rawValue) does not exist", color: .red)
+                    return false
+                }
+                
+            case .immediate(let value):
+                let resultAnd = self.convertRegisterValue(registerDest.value) & value
+                let resultOr = self.convertRegisterValue(registerDest.value) | value
+                let resultXor = self.convertRegisterValue(registerDest.value) ^ value
+                
+                if let newRegisterValue = Register.getRegisterValue(registerDest.type, action.getValue(resultAnd, resultOr, resultXor)){
+                    let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
+                    self.registers.updateValue(newRegister, forKey: registerDest.type)
+                }else{
+                    return false
+                }
+                
+            case .memory(_):
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
+                return false
+            }
+            
+            return true
+        }
+    }
+    
+    private enum AndOrXor{
+        case and
+        case or
+        case xor
+        
+        func getValue(_ andValue: Int, _ orValue: Int, _ xorValue: Int) -> Int{
+            switch self {
+            case .and:
+                return andValue
+            case .or:
+                return orValue
+            case .xor:
+                return xorValue
+            }
+        }
+    }
+    
+    private func executeShlShr(_ instruction: Instruction, right: Bool = false) -> Bool {
+        guard instruction.operands.count == 2 else {
+//            Error
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode.rawValue.uppercased()) require 2 arguments", color: .red)
+            return false
+        }
+        
+        let operand1 = instruction.operands[0]
+        let operand2 = instruction.operands[1]
+        
+        switch operand1 {
+        case .register(let registerTypeDest):
+            let _ = verifyRegisterExist(registerTypeDest, strict: self.strict)
+            
+            if let register = self.registers.first(where: { $0.key == registerTypeDest })?.value {
+                return executeRegister(register)
+            }else{
+//                Error
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerTypeDest.rawValue) does not exist", color: .red)
+                return false
+            }
+        case .immediate(_):
+            ConsoleLine.shared.appendLine("Asm Intel x86", "The first argument only accept register", color: .red)
+            return false
+        case .memory(_):
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
+            return false
+        }
+        
+        func executeRegister(_ registerDest: Register) -> Bool {
+            switch operand2 {
+                
+            case .register(let registerType):
+                let result = verifyRegisterExist(registerType, strict: self.strict)
+                
+                if !result{
+    //                Error
+                    ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerType.rawValue) does not exist", color: .red)
+                    return false
+                }
+                
+                if let registerValue =  self.registers.first(where: { $0.key == registerType })?.value {
+                    let resultLeft = self.convertRegisterValue(registerDest.value) << self.convertRegisterValue(registerValue.value)
+                    let resultRight = self.convertRegisterValue(registerDest.value) >> self.convertRegisterValue(registerValue.value)
+                    
+                    if let newRegisterValue = Register.getRegisterValue(registerDest.type, right ? resultRight : resultLeft){
+                        let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
+                        self.registers.updateValue(newRegister, forKey: registerDest.type)
+                    }else{
+                        return false
+                    }
+                    
+                }else{
+                    ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerType.rawValue) does not exist", color: .red)
+                    return false
+                }
+                
+            case .immediate(let value):
+                let resultLeft = self.convertRegisterValue(registerDest.value) << value
+                let resultRight = self.convertRegisterValue(registerDest.value) >> value
+                
+                if let newRegisterValue = Register.getRegisterValue(registerDest.type, right ? resultRight : resultLeft){
+                    let newRegister = Register(type: registerDest.type, size: registerDest.size, value: newRegisterValue)
+                    self.registers.updateValue(newRegister, forKey: registerDest.type)
+                }else{
+                    return false
+                }
+                
+            case .memory(_):
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
                 return false
             }
             

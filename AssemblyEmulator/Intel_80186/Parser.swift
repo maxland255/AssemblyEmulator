@@ -89,6 +89,18 @@ class Asm80186Parser {
             return .or
         case "xor":
             return .xor
+        case "shl":
+            return .shl
+        case "shr":
+            return .shr
+        
+//        Misc
+        case "nop":
+            return .nop
+        case "lea":
+            return .lea
+        case "int":
+            return .int
             
 //            Stop
         case "htl":

@@ -179,7 +179,7 @@ struct Intel_x86_80186_UI: View {
 
 
 enum ProcessorType: String, CaseIterable {
-    case none = "No processor selected"
+    case none = "No processor"
     case intel_80186 = "Intel 80186"
     case intel_80286 = "Intel 80286"
 }

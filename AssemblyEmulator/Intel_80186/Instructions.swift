@@ -34,6 +34,13 @@ enum OpCode: String, CaseIterable {
     case and
     case or
     case xor
+    case shl
+    case shr
+    
+//    Misc
+    case nop
+    case lea
+    case int
     
 //    Stop
     case hlt

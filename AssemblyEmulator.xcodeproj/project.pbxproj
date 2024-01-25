@@ -13,6 +13,7 @@
 		B80AD3F22B59CD4500B2C04E /* AboutWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80AD3F12B59CD4500B2C04E /* AboutWindow.swift */; };
 		B849305E2B5B1A4700404DF1 /* CodeEditorView in Frameworks */ = {isa = PBXBuildFile; productRef = B849305D2B5B1A4700404DF1 /* CodeEditorView */; };
 		B84930602B5B1A4700404DF1 /* LanguageSupport in Frameworks */ = {isa = PBXBuildFile; productRef = B849305F2B5B1A4700404DF1 /* LanguageSupport */; };
+		B88F52A02B5C734300A854A0 /* Modifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88F529F2B5C734300A854A0 /* Modifier.swift */; };
 		B897F18D2B588A9D0041917F /* AssemblyEmulatorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B897F18C2B588A9D0041917F /* AssemblyEmulatorApp.swift */; };
 		B897F18F2B588A9D0041917F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B897F18E2B588A9D0041917F /* ContentView.swift */; };
 		B897F1912B588A9E0041917F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B897F1902B588A9E0041917F /* Assets.xcassets */; };
@@ -29,6 +30,7 @@
 		B80AD3ED2B599AC400B2C04E /* Intel_x86_80186_UI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Intel_x86_80186_UI.swift; sourceTree = "<group>"; };
 		B80AD3EF2B59A16C00B2C04E /* VisualEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEffect.swift; sourceTree = "<group>"; };
 		B80AD3F12B59CD4500B2C04E /* AboutWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindow.swift; sourceTree = "<group>"; };
+		B88F529F2B5C734300A854A0 /* Modifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Modifier.swift; sourceTree = "<group>"; };
 		B897F1892B588A9D0041917F /* AssemblyEmulator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AssemblyEmulator.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B897F18C2B588A9D0041917F /* AssemblyEmulatorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssemblyEmulatorApp.swift; sourceTree = "<group>"; };
 		B897F18E2B588A9D0041917F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -79,6 +81,7 @@
 				B897F18C2B588A9D0041917F /* AssemblyEmulatorApp.swift */,
 				B897F18E2B588A9D0041917F /* ContentView.swift */,
 				B897F1A42B58A2000041917F /* Console.swift */,
+				B88F529F2B5C734300A854A0 /* Modifier.swift */,
 				B80AD3EF2B59A16C00B2C04E /* VisualEffect.swift */,
 				B80AD3F12B59CD4500B2C04E /* AboutWindow.swift */,
 				B897F1902B588A9E0041917F /* Assets.xcassets */,
@@ -193,6 +196,7 @@
 				B897F1A52B58A2000041917F /* Console.swift in Sources */,
 				B80AD3F22B59CD4500B2C04E /* AboutWindow.swift in Sources */,
 				B80AD3EE2B599AC400B2C04E /* Intel_x86_80186_UI.swift in Sources */,
+				B88F52A02B5C734300A854A0 /* Modifier.swift in Sources */,
 				B897F1A12B5891650041917F /* Parser.swift in Sources */,
 				B897F19F2B58903F0041917F /* Instructions.swift in Sources */,
 				B897F18D2B588A9D0041917F /* AssemblyEmulatorApp.swift in Sources */,

@@ -41,6 +41,8 @@ struct ConsoleView: View {
     
     @State var viewHeight: CGFloat = 200
     
+    @State var popOverResult: [ConsoleFilter] = []
+    
     var body: some View {
         VStack(spacing: 0) {
             Divider()
@@ -71,14 +73,16 @@ struct ConsoleView: View {
                     ScrollViewReader { proxy in
                         ScrollView {
                             ForEach(lines.line.filter({filterText.isEmpty ? true : $0.search.lowercased().contains(filterText.lowercased())}), id: \.self) {line in
-                                HStack {
-                                    Text("[\(line.programm)]: \(line.value)")
-                                        .foregroundStyle(line.color)
-                                        .textSelection(.enabled)
-                                        .padding(2.5)
-                                        .id(line.id)
-                                    
-                                    Spacer()
+                                if popOverResult.isEmpty ? true : popOverResult.contains(where: { color in color.getColorFilter() == line.color}) {
+                                    HStack {
+                                        Text("[\(line.programm)]: \(line.value)")
+                                            .foregroundStyle(line.color)
+                                            .textSelection(.enabled)
+                                            .padding(2.5)
+                                            .id(line.id)
+                                        
+                                        Spacer()
+                                    }
                                 }
                             }
                         }.onChange(of: lines.line) {
@@ -98,6 +102,7 @@ struct ConsoleView: View {
                                 
                                 TextField("Filter", text: $filterText)
                                     .textFieldStyle(.roundedBorder)
+                                    .consoleFilterButtonField(popOverResult: $popOverResult)
                                     .frame(width: 300)
                                 
                                 Button {
