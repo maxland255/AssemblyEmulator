@@ -34,7 +34,7 @@ struct Intel_x86_80186_UI: View {
                             Rectangle()
                                 .foregroundStyle(.background)
                             
-                            Text("Current line: \"\(currentInstruction.lineValue)\" (line number: \(currentInstruction.lineNumber))")
+                            Text("Current line: \"\(currentInstruction.lineValue.replacingOccurrences(of: "\t", with: ""))\" (line number: \(currentInstruction.lineNumber))")
                                 .padding(.horizontal)
                         }.frame(height: 30)
                         
@@ -72,9 +72,9 @@ struct Intel_x86_80186_UI: View {
                         }
                         
                         let instructions = parser.parse(sourceCode)
-                                                                
-                        if !instructions.isEmpty{
-                            interpreter.interpret(instructions, strict: processor != .none)
+                                                
+                        if !instructions.0.isEmpty || !instructions.1.isEmpty{
+                            interpreter.interpret(instructions.0, instructions.1, strict: processor != .none)
                         }
                     }, label: {
                         Image(systemName: "play.fill")
@@ -93,9 +93,9 @@ struct Intel_x86_80186_UI: View {
                         
                         let instructions = parser.parse(sourceCode)
                                                                 
-                        if !instructions.isEmpty{
+                        if !instructions.0.isEmpty || !instructions.1.isEmpty{
                             self.runedStepByStep = true
-                            let result_interpreter = interpreter.interpretStepByStep(instructions, strict: processor != .none)
+                            let result_interpreter = interpreter.interpretStepByStep(instructions.0, instructions.1, strict: processor != .none)
                                                         
                             if result_interpreter == false{
                                 self.stopInterpreter()
@@ -114,10 +114,11 @@ struct Intel_x86_80186_UI: View {
                             ConsoleLine.shared.appendLine("Asm Intel x86", "Killed by user", color: .green)
                         } label: {
                             Image(systemName: "square.fill")
-                        }
+                        }.keyboardShortcut("k", modifiers: .command)
+                            .help("Kill program (Command + k)")
                         
                         Button {
-                            let result_interpreter = interpreter.interpretStepByStep(nil, index: interpreter.stepNumber - 1)
+                            let result_interpreter = interpreter.interpretStepByStep(nil, nil, index: interpreter.stepNumber - 1)
                             
                             if result_interpreter == false{
                                 self.stopInterpreter()
@@ -126,9 +127,10 @@ struct Intel_x86_80186_UI: View {
                             Image(systemName: "arrow.turn.up.left")
                         }.disabled(interpreter.stepNumber == 0)
                             .keyboardShortcut(.leftArrow, modifiers: .command)
+                            .help("Kill program (Command + <-)")
                         
                         Button {
-                            let result_interpreter = interpreter.interpretStepByStep(nil, index: interpreter.stepNumber + 1)
+                            let result_interpreter = interpreter.interpretStepByStep(nil, nil, index: interpreter.stepNumber + 1)
                             
                             if result_interpreter == false{
                                 self.stopInterpreter()
@@ -138,6 +140,7 @@ struct Intel_x86_80186_UI: View {
                         } label: {
                             Image(systemName: "arrow.turn.up.right")
                         }.keyboardShortcut(.rightArrow, modifiers: .command)
+                            .help("Kill program (Command + ->)")
                     }
                 }
             }
@@ -165,10 +168,13 @@ struct Intel_x86_80186_UI: View {
     
     private func stopInterpreter(){
         interpreter.instructions = []
+        interpreter.funcInstructions = [:]
         interpreter.stepNumber = 0
         interpreter.maximumStep = 0
         interpreter.runed = false
         interpreter.currentInstruction = nil
+        interpreter.executeInstructions = 0
+        interpreter.executeFuncInstructions = 0
         runedStepByStep = false
     }
 }

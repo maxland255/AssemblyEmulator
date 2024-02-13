@@ -10,13 +10,19 @@ import Foundation
 
 class Asm80186Parser {
     
-    func parse(_ sourceCode: String) -> [Instruction] {
+    private var parseFunction = false
+    private var functionAvailable = [String]()
+    
+    func parse(_ sourceCode: String) -> ([Instruction], [String:Instruction]) {
         var instructions = [Instruction]()
+        var functionsInstructions = [String:Instruction]()
         
 //        Divides source code online
         let lines = sourceCode.components(separatedBy: .newlines)
         
         var linesRemoved = lines
+        
+        var currentFuncInstruction: Instruction? = nil
         
         for line in lines {
 //            Ignore comment
@@ -25,21 +31,68 @@ class Asm80186Parser {
             }
             
 //            Divide the line into words
-            let components = line.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }
+            let components = line.components(separatedBy: CharacterSet(charactersIn: " \n")).filter { !$0.isEmpty }
             
 //            Get if line is empty
-            guard !components.isEmpty else {
+            guard !components.isEmpty && !components.isOnlyTabs() else {
                 continue
             }
             
             let opCodeString = components[0]
             let operands = Array(components.dropFirst().joined(separator: "").components(separatedBy: ",").filter { !$0.isEmpty })
             
+            
+            if self.parseFunction && !opCodeString.hasPrefix("\t"){
+                self.parseFunction = false
+                
+                if let currentFuncInstruction = currentFuncInstruction{
+                    if currentFuncInstruction.instructions?.isEmpty ?? true{
+                        ConsoleLine.shared.error("Asm Intel x86", "Error function \(currentFuncInstruction.functionName ?? "") without any instructions is not allowed")
+                        return ([], [:])
+                    }
+                    
+                    instructions.append(currentFuncInstruction)
+                    
+                    if functionsInstructions.contains(where: {$0.key == currentFuncInstruction.functionName}){
+                        ConsoleLine.shared.error("Asm Intel x86", "Error, two functions with the same name detected")
+                        return ([], [:])
+                    }
+                    
+                    functionsInstructions.updateValue(currentFuncInstruction, forKey: currentFuncInstruction.functionName!)
+                }
+                
+                currentFuncInstruction = nil
+            }
+            
             if let opCode = parseOpCode(opCodeString) {
-                if let parsedOperands = parseOperands(operands) {
+                if self.parseFunction, let parsedOperands = parseOperands(operands){
                     let lineIndex = linesRemoved.firstIndex(of: line)
                     
-                    let instruction = Instruction(opcode: opCode, operands: parsedOperands, lineNumber: (lineIndex ?? -1) + 1, lineValue: line)
+                    let instruction = Instruction(opcode: opCode, operands: parsedOperands, lineNumber: (lineIndex ?? -1) + 1, lineValue: line, function: false, functionName: nil, instructions: nil)
+                    
+                    if let lineIndex = lineIndex{
+                        linesRemoved[lineIndex] += Date().ISO8601Format()
+                    }
+                    
+                    currentFuncInstruction?.instructions?.append(instruction)                    
+                }else if opCode == OpCode.funcLabel{
+                    let lineIndex = linesRemoved.firstIndex(of: line)
+                    
+                    let funcName = self.getFunctionName(operand: opCodeString)
+                    
+                    self.parseFunction = true
+                    
+                    currentFuncInstruction = Instruction(opcode: opCode, operands: [], lineNumber: (lineIndex ?? -1) + 1, lineValue: line, function: true, functionName: funcName, instructions: [])
+                    
+                    self.functionAvailable.append(funcName)
+                    
+                    if let lineIndex = lineIndex{
+                        linesRemoved[lineIndex] += Date().ISO8601Format()
+                    }
+                }else if let parsedOperands = parseOperands(operands) {
+                    let lineIndex = linesRemoved.firstIndex(of: line)
+                    
+                    let instruction = Instruction(opcode: opCode, operands: parsedOperands, lineNumber: (lineIndex ?? -1) + 1, lineValue: line, function: false, functionName: nil, instructions: nil)
                     
                     if let lineIndex = lineIndex{
                         linesRemoved[lineIndex] += Date().ISO8601Format()
@@ -47,66 +100,95 @@ class Asm80186Parser {
                     
                     instructions.append(instruction)
                 }else{
-                    return []
+                    return ([], [:])
                 }
             }else{
-                ConsoleLine.shared.appendLine("Asm Intel x86", "Error to parse instruction: \(line)", color: .red)
-                return []
+                ConsoleLine.shared.error("Asm Intel x86", "Error to parse instruction: \(line)")
+                return ([], [:])
             }
         }
         
-        return instructions
+        if let currentFuncInstruction = currentFuncInstruction{
+            if currentFuncInstruction.instructions?.isEmpty ?? true{
+                ConsoleLine.shared.error("Asm Intel x86", "Error function \(currentFuncInstruction.functionName ?? "") without any instructions is not allowed")
+                return ([], [:])
+            }
+            
+            instructions.append(currentFuncInstruction)
+            
+            if functionsInstructions.contains(where: {$0.key == currentFuncInstruction.functionName}){
+                ConsoleLine.shared.error("Asm Intel x86", "Error, two functions with the same name detected (\(currentFuncInstruction.functionName ?? "Error")")
+                return ([], [:])
+            }
+            
+            functionsInstructions.updateValue(currentFuncInstruction, forKey: currentFuncInstruction.functionName!)
+        }
+        
+        return (instructions, functionsInstructions)
     }
     
-    private func parseOpCode(_ opCode: String) -> OpCode? {
+    private func parseOpCode(_ opCode: String, parseFunc: Bool? = nil) -> OpCode? {
         switch opCode.lowercased() {
 //            Transfer
-        case "mov":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")mov":
             return .mov
             
 //            Arithemtic
-        case "add":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")add":
             return .add
-        case "sub":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")sub":
             return .sub
-        case "div":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")div":
             return .div
-        case "mul":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")mul":
             return .mul
-        case "inc":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")inc":
             return .inc
-        case "dec":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")dec":
             return .dec
             
 //            Logic
-        case "neg":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")neg":
             return .neg
-        case "not":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")not":
             return .not
-        case "and":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")and":
             return .and
-        case "or":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")or":
             return .or
-        case "xor":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")xor":
             return .xor
-        case "shl":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")shl":
             return .shl
-        case "shr":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")shr":
             return .shr
         
 //        Misc
-        case "nop":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")nop":
             return .nop
-        case "lea":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")lea":
             return .lea
-        case "int":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")int":
             return .int
             
+//            Jumps
+            
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")call":
+            return .call
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")jmp":
+            return .jmp
+            
 //            Stop
-        case "htl":
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")hlt":
             return .hlt
         default:
-            return nil
+            if opCode.hasSuffix(":"){
+                return .funcLabel
+            }else if parseFunc ?? self.parseFunction{
+                return self.parseOpCode(opCode, parseFunc: false)
+            }else{
+                return nil
+            }
         }
     }
     
@@ -120,13 +202,19 @@ class Asm80186Parser {
                 operands.append(.immediate(immediateValue))
             }else if operand.hasPrefix("[") && operand.hasSuffix("]") {
                 operands.append(.memory(operand))
+            }else if self.functionAvailable.contains(operand){
+                operands.append(.functions(operand))
             }else{
-                ConsoleLine.shared.appendLine("Asm Intel x86", "Error to parse operand: \(operand)", color: .red)
+                ConsoleLine.shared.error("Asm Intel x86", "Error to parse operand: \(operand)")
                 return nil
             }
         }
         
         return operands
+    }
+    
+    private func getFunctionName(operand: String) -> String{
+        return operand.replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\t", with: "").replacingOccurrences(of: ":", with: "")
     }
     
     private func getImmediateValue(_ value: String) -> Int?{

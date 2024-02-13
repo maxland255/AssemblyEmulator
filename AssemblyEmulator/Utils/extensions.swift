@@ -6,3 +6,22 @@
 //
 
 import Foundation
+
+
+extension Array{
+    func isOnlyTabs() -> Bool{
+        if self.isEmpty{
+            return false
+        }
+        
+        for element in self{
+            if let element = element as? String{
+                if element != "\t" {
+                    return false
+                }
+            }
+        }
+        
+        return true
+    }
+}

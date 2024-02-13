@@ -19,6 +19,38 @@ class ConsoleLine: ObservableObject {
     func appendLine(_ programm: String, _ value: String, color: Color = Color.white) {
         line.append(Console(color: color, programm: programm, value: value))
     }
+    
+    func error(_ programm: String, _ value: String) {
+        line.append(Console(color: .red, programm: "\(programm) (ERROR)", value: value))
+    }
+    
+    func debug(_ programm: String, _ value: String) {
+        line.append(Console(color: .blue, programm: "\(programm) (DEBUG)", value: value))
+    }
+    
+    func warning(_ programm: String, _ value: String) {
+        line.append(Console(color: .orange, programm: "\(programm) (WARNING)", value: value))
+    }
+    
+    func info(_ programm: String, _ value: String) {
+        line.append(Console(color: .green, programm: "\(programm) (INFO)", value: value))
+    }
+    
+    static func error(_ programm: String, _ value: String) {
+        self.shared.line.append(Console(color: .red, programm: "\(programm) (ERROR)", value: value))
+    }
+    
+    static func debug(_ programm: String, _ value: String) {
+        self.shared.line.append(Console(color: .blue, programm: "\(programm) (DEBUG)", value: value))
+    }
+    
+    static func warning(_ programm: String, _ value: String) {
+        self.shared.line.append(Console(color: .orange, programm: "\(programm) (WARNING)", value: value))
+    }
+    
+    static func info(_ programm: String, _ value: String) {
+        self.shared.line.append(Console(color: .green, programm: "\(programm) (INFO)", value: value))
+    }
 }
 
 

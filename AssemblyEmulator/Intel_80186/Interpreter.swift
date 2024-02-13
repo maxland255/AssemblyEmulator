@@ -12,37 +12,46 @@ import SwiftUI
 class Asm80186Interpreter: ObservableObject {
     @Published var registers = [X86Register:Register]()
     @Published var stepNumber: UInt = 0
-    @Published var maximumStep: Int = 0
+    @Published var maximumStep: UInt = 0
+    @Published var funcInstructionCount: UInt = 0
+    @Published var executeFuncInstructions: UInt = 0
+    @Published var executeInstructions: UInt = 0
+    @Published var skipedInstruction: UInt = 0
     @Published var runed = false
     @Published var currentInstruction: Instruction?
     
     var strict: Bool = false
     var instructions = [Instruction]()
+    var funcInstructions = [String:Instruction]()
     
-    func interpret(_ instructions: [Instruction], strict: Bool = false) {
+    func interpret(_ instructions: [Instruction], _ funcInstructions: [String:Instruction], strict: Bool = false) {
         self.strict = strict
         self.runed = true
         
         for instruction in instructions {
-            let result_execute = self.executeInstruction(instruction)
+            if instruction.function && instruction.functionName != "main" {
+                continue
+            }
+            
+            let result_execute = instruction.opcode == .funcLabel && instruction.functionName == "main" ? self.executeFunction(funcInstructions, functionName: "main") : self.executeInstruction(instruction, funcInstructions)
             
             if result_execute == nil{
                 return
             }else if result_execute == false{
-                ConsoleLine.shared.appendLine("Asm Intel x86", "Stopping...", color: .red)
+                ConsoleLine.error("Asm Intel x86", "Stopping...")
                 self.runed = false
                 return
             }
         }
         
-        ConsoleLine.shared.appendLine("Asm Intel x86", "Stopping...", color: .green)
+        ConsoleLine.info("Asm Intel x86", "Stopping...")
         self.runed = false
     }
     
     ///
     ///Run interpreter step by step
     ///
-    func interpretStepByStep(_ instructions: [Instruction]?, strict: Bool? = nil, index: UInt = 0) -> Bool?{
+    func interpretStepByStep(_ instructions: [Instruction]?, _ funcInstructions: [String:Instruction]?, strict: Bool? = nil, index: UInt = 0) -> Bool?{
         if let strict = strict{
             self.strict = strict
         }
@@ -54,7 +63,9 @@ class Asm80186Interpreter: ObservableObject {
             self.runed = false
             return false
         }else if let instructions = instructions{
-            self.maximumStep = instructions.count - 1
+            let instructionCount = self.instructionsCount(instructions)
+            self.maximumStep = instructionCount.0
+            self.funcInstructionCount = instructionCount.1
             self.instructions = instructions
             
             if index >= self.maximumStep{
@@ -62,18 +73,38 @@ class Asm80186Interpreter: ObservableObject {
                 return false
             }
         }
-                
+        
+        if let funcInstructions = funcInstructions {
+            self.funcInstructions = funcInstructions
+        }
+        
+        self.executeInstructions = 0
+        self.executeFuncInstructions = 0
+        self.skipedInstruction = 0
+        
         for instruction in instructions ?? self.instructions {
-            if ((instructions ?? self.instructions).firstIndex(where: { $0.id == instruction.id }))! <= index{
-                let result_execute = self.executeInstruction(instruction)
+            
+            if ((instructions ?? self.instructions).firstIndex(where: { $0.id == instruction.id }))! - Int(self.skipedInstruction) + Int(self.executeFuncInstructions) <= index{
+                var result_execute: Bool? = false
                 
-                self.currentInstruction = instruction
+                if instruction.function && instruction.functionName == "main"{
+                    result_execute = self.executeFunctionStepByStep(funcInstructions ?? self.funcInstructions, functionName: "main", index: index)
+                }else if instruction.function {
+                    self.skipedInstruction += 1
+                    continue
+                }else{
+                    self.executeInstructions += 1
+                    
+                    self.currentInstruction = instruction
+                    
+                    result_execute = self.executeInstruction(instruction, funcInstructions ?? self.funcInstructions, index: index)
+                }
                 
                 if result_execute == nil{
                     self.runed = false
                     return nil
                 }else if result_execute == false{
-                    ConsoleLine.shared.appendLine("Asm Intel x86", "Stopping...", color: .red)
+                    ConsoleLine.error("Asm Intel x86", "Stopping...")
                     self.runed = false
                     return false
                 }
@@ -81,9 +112,9 @@ class Asm80186Interpreter: ObservableObject {
                 return true
             }
         }
-        
-        if index > self.maximumStep{
-            ConsoleLine.shared.appendLine("Asm Intel x86", "Stopping...", color: .green)
+                                
+        if index >= self.maximumStep{
+            ConsoleLine.info("Asm Intel x86", "Stopping...")
             self.runed = false
             return nil
         }else{
@@ -91,7 +122,90 @@ class Asm80186Interpreter: ObservableObject {
         }
     }
     
-    private func executeInstruction(_ instruction: Instruction) -> Bool?{
+    ///
+    ///Execute function instructions
+    ///
+    private func executeFunction(_ funcInstructions: [String:Instruction], functionName: String) -> Bool? {
+        let instruction = funcInstructions[functionName]
+        
+        if let instruction = instruction{
+            
+            for instruct in instruction.instructions ?? []{
+                let result_execute = self.executeInstruction(instruct, funcInstructions)
+                
+                if result_execute == nil || result_execute == false{
+                    return result_execute
+                }
+            }
+            
+            return true
+        }else{
+            ConsoleLine.error("Asm Intel x86", "Function \(functionName) is not found")
+            return nil
+        }
+    }
+    
+    ///
+    ///Execute function instructions step by step
+    ///
+    private func executeFunctionStepByStep(_ funcInstructions: [String:Instruction], functionName: String, index: UInt = 0) -> Bool? {
+        let instruction = funcInstructions[functionName]
+        
+        if let instruction = instruction{
+            var localInstructionsExecuted = 0
+            
+            for instruct in instruction.instructions ?? [] {
+                
+                if instruction.instructions!.firstIndex(where: { $0.id == instruct.id })! + Int(self.executeInstructions) + Int(self.executeFuncInstructions) - localInstructionsExecuted <= index{
+                    self.executeFuncInstructions += 1
+                    localInstructionsExecuted += 1
+                    
+                    self.currentInstruction = instruct
+                    
+                    let result_execute = self.executeInstruction(instruct, funcInstructions, index: index)
+                    
+                    if result_execute == nil{
+                        self.runed = false
+                        return nil
+                    }else if result_execute == false{
+                        ConsoleLine.error("Asm Intel x86", "Stopping...")
+                        self.runed = false
+                        return false
+                    }
+                }else{
+                    return true
+                }
+            }
+        }else{
+            ConsoleLine.error("Asm Intel x86", "Function \(functionName) is not found")
+            return nil
+        }
+        
+        return true
+    }
+    
+    private func instructionsCount(_ instructions: [Instruction]) -> (UInt, UInt){
+        var instructionCount: UInt = 0
+        var funcInstructionCount: UInt = 0
+        
+        for instruction in instructions {
+            switch instruction.opcode {
+            case .funcLabel:
+                if let funcInstructions = instruction.instructions, !(instruction.instructions?.isEmpty ?? true){
+                    let funcInstructCount = self.instructionsCount(funcInstructions)
+                    instructionCount += funcInstructCount.0
+                    funcInstructionCount += funcInstructCount.0
+                }
+                
+            default:
+                instructionCount += 1
+            }
+        }
+        
+        return (instructionCount, funcInstructionCount)
+    }
+    
+    private func executeInstruction(_ instruction: Instruction, _ funcInstruction: [String:Instruction], index: UInt? = nil) -> Bool?{
         switch instruction.opcode {
 //                Transfer
         case .mov:
@@ -132,16 +246,27 @@ class Asm80186Interpreter: ObservableObject {
 //            NOP operator is an equivalent of pass in Python
             return true
         case .lea:
-            ConsoleLine.shared.appendLine("Asm Intel x86 (WARNING)", "LEA instruction is not implemented for the moment", color: .orange)
+            ConsoleLine.warning("Asm Intel x86", "LEA instruction is not implemented for the moment")
             return true
         case .int:
-            ConsoleLine.shared.appendLine("Asm Intel x86", "INT instruction is not supported in \(NSApplication.appName)", color: .red)
+            ConsoleLine.error("Asm Intel x86", "INT instruction is not supported in \(NSApplication.appName)")
             return false
+            
+//            Jumps
+        case .call:
+            ConsoleLine.warning("Asm Intel x86", "The CALL instruction does not behave as a real CALL instruction; at the moment, it functions the same as the JMP instruction")
+            return self.executeJmp(instruction, funcInstruction, index: index)
+        case .jmp:
+            return self.executeJmp(instruction, funcInstruction, index: index)
         
 //                Stop
         case .hlt:
-            ConsoleLine.shared.appendLine("Asm Intel x86", "Stopping...", color: .green)
+            ConsoleLine.info("Asm Intel x86", "Stopping...")
             return nil
+            
+//            Function
+        case .funcLabel:
+            return true
         }
     }
     
@@ -215,6 +340,9 @@ class Asm80186Interpreter: ObservableObject {
 //                Error
                 ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
                 return false
+            case .functions(_):
+                ConsoleLine.shared.error("Asm Intel x86", "An error occured to interpret the code")
+                return false
             }
             
             return true
@@ -247,6 +375,9 @@ class Asm80186Interpreter: ObservableObject {
             return false
         case .memory(_):
             ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
+            return false
+        case .functions(_):
+            ConsoleLine.shared.error("Asm Intel x86", "An error occured to interpret the code")
             return false
         }
         
@@ -292,6 +423,9 @@ class Asm80186Interpreter: ObservableObject {
             case .memory(_):
                 ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
                 return false
+            case .functions(_):
+                ConsoleLine.shared.error("Asm Intel x86", "An error occured to interpret the code")
+                return false
             }
             
             return true
@@ -327,6 +461,9 @@ class Asm80186Interpreter: ObservableObject {
             return false
         case .memory(_):
             ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
+            return false
+        case .functions(_):
+            ConsoleLine.shared.error("Asm Intel x86", "An error occured to interpret the code")
             return false
         }
         
@@ -377,6 +514,9 @@ class Asm80186Interpreter: ObservableObject {
             case .memory(_):
                 ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
                 return false
+            case .functions(_):
+                ConsoleLine.shared.error("Asm Intel x86", "An error occured to interpret the code")
+                return false
             }
             
             return true
@@ -409,6 +549,9 @@ class Asm80186Interpreter: ObservableObject {
             return false
         case .memory(_):
             ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
+            return false
+        case .functions(_):
+            ConsoleLine.shared.error("Asm Intel x86", "An error occured to interpret the code")
             return false
         }
         
@@ -453,6 +596,9 @@ class Asm80186Interpreter: ObservableObject {
             return false
         case .memory(_):
             ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
+            return false
+        case .functions(_):
+            ConsoleLine.shared.error("Asm Intel x86", "An error occured to interpret the code")
             return false
         }
         
@@ -518,6 +664,9 @@ class Asm80186Interpreter: ObservableObject {
         case .memory(_):
             ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
             return false
+        case .functions(_):
+            ConsoleLine.shared.error("Asm Intel x86", "An error occured to interpret the code")
+            return false
         }
         
         func executeRegister(_ registerDest: Register) -> Bool {
@@ -571,6 +720,9 @@ class Asm80186Interpreter: ObservableObject {
         case .memory(_):
             ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
             return false
+        case .functions(_):
+            ConsoleLine.shared.error("Asm Intel x86", "An error occured to interpret the code")
+            return false
         }
         
         func executeRegister(_ registerDest: Register) -> Bool {
@@ -616,6 +768,9 @@ class Asm80186Interpreter: ObservableObject {
                 
             case .memory(_):
                 ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
+                return false
+            case .functions(_):
+                ConsoleLine.shared.error("Asm Intel x86", "An error occured to interpret the code")
                 return false
             }
             
@@ -667,6 +822,9 @@ class Asm80186Interpreter: ObservableObject {
         case .memory(_):
             ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
             return false
+        case .functions(_):
+            ConsoleLine.shared.error("Asm Intel x86", "An error occured to interpret the code")
+            return false
         }
         
         func executeRegister(_ registerDest: Register) -> Bool {
@@ -711,9 +869,39 @@ class Asm80186Interpreter: ObservableObject {
             case .memory(_):
                 ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
                 return false
+            case .functions(_):
+                ConsoleLine.shared.error("Asm Intel x86", "An error occured to interpret the code")
+                return false
             }
             
             return true
+        }
+    }
+    
+    
+    private func executeJmp(_ instruction: Instruction, _ funcInstruction: [String:Instruction], index: UInt?) -> Bool? {
+        guard instruction.operands.count == 1 else {
+//            Error
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode.rawValue.uppercased()) require 1 arguments", color: .red)
+            return false
+        }
+        
+        let operand = instruction.operands[0]
+        
+        switch operand{
+        case .functions(let funcName):
+            if let index = index{
+                let result = self.executeFunctionStepByStep(funcInstruction, functionName: funcName, index: index)
+                
+                return result
+            }else{
+                let result = self.executeFunction(funcInstruction, functionName: funcName)
+                
+                return result
+            }
+        default:
+            ConsoleLine.shared.error("Asm Intel x86", "Instruction JMP only accept function name for argument")
+            return false
         }
     }
     

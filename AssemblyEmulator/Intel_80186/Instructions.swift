@@ -14,6 +14,9 @@ struct Instruction {
     let operands: [Operand]
     let lineNumber: Int
     let lineValue: String
+    let function: Bool
+    let functionName: String?
+    var instructions: [Instruction]?
 }
 
 enum OpCode: String, CaseIterable {
@@ -42,13 +45,28 @@ enum OpCode: String, CaseIterable {
     case lea
     case int
     
+//    Jumps
+    case call
+    case jmp
+    
 //    Stop
     case hlt
+    
+//    Functions
+    case funcLabel
 }
 
 extension OpCode{
     static func values() -> [String]{
         return self.allCases.map { $0.rawValue }
+    }
+    
+    func getRegister(_ processor: ProcessorType? = nil) -> X86Register?{
+        if processor == nil{
+            return nil
+        }else{
+            return X86Register.ax
+        }
     }
 }
 
@@ -56,4 +74,5 @@ enum Operand: Equatable {
     case register(X86Register)  // Register name (e.g. "ax", "bx")
     case immediate(Int)    // Immediate value
     case memory(String)     // Memory address (e.g. "[ax]", "[bx+si]")
+    case functions(String)  // Function name (e.g. "main", "test")
 }
