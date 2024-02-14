@@ -47,6 +47,12 @@ struct AboutWindow: View {
                     } label: {
                         Text("Licence")
                     }
+                    
+                    Button {
+                        openURL(URL(string: "https://github.com/maxland255/AssemblyEmulator")!)
+                    } label: {
+                        Text("Github")
+                    }
                 
                     Spacer()
                 }
