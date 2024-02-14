@@ -210,6 +210,8 @@ class Asm80186Interpreter: ObservableObject {
 //                Transfer
         case .mov:
             return executeMov(instruction)
+        case .xchg:
+            return executeXchg(instruction)
             
 //                Arithmetic
         case .add:
@@ -249,7 +251,8 @@ class Asm80186Interpreter: ObservableObject {
             ConsoleLine.warning("Asm Intel x86", "LEA instruction is not implemented for the moment")
             return true
         case .int:
-            ConsoleLine.error("Asm Intel x86", "INT instruction is not supported in \(NSApplication.appName)")
+            let error = NotSupported(instruction: "INT", line: instruction.lineNumber.toUInt(), column: 0, endError: instruction.lineValue.count.toUInt(), lineText: instruction.lineValue)
+            ConsoleLine.error(error: error)
             return false
             
 //            Jumps
@@ -902,6 +905,73 @@ class Asm80186Interpreter: ObservableObject {
         default:
             ConsoleLine.shared.error("Asm Intel x86", "Instruction JMP only accept function name for argument")
             return false
+        }
+    }
+    
+    
+    private func executeXchg(_ instruction: Instruction) -> Bool?{
+        guard instruction.operands.count == 2 else {
+//            Error
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode.rawValue.uppercased()) require 2 arguments", color: .red)
+            return false
+        }
+        
+        let operand1 = instruction.operands[0]
+        let operand2 = instruction.operands[1]
+        
+        switch operand1{
+        case .register(let registerTypeDest):
+            let _ = verifyRegisterExist(registerTypeDest, strict: self.strict)
+            
+            if let register = self.registers.first(where: { $0.key == registerTypeDest })?.value {
+                return executeRegister(register)
+            }else{
+//                Error
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerTypeDest.rawValue) does not exist", color: .red)
+                return false
+            }
+            
+        default:
+            ConsoleLine.error("Asm Intel x86", "Instruction XCHG only accept register")
+            return false
+        }
+        
+        func executeRegister(_ registerDest: Register) -> Bool {
+            switch operand2 {
+                
+            case .register(let registerType):
+                let result = verifyRegisterExist(registerType, strict: self.strict)
+                
+                if !result{
+    //                Error
+                    ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerType.rawValue) does not exist", color: .red)
+                    return false
+                }
+                
+                if let registerSrc =  self.registers.first(where: { $0.key == registerType })?.value {
+                    
+                    if let newRegisterDestValue = Register.getRegisterValue(registerDest.type, registerSrc.value.value()), let newRegisterSrcValue = Register.getRegisterValue(registerSrc.type, registerDest.value.value()){
+                                                
+                        let newRegisterDest = Register(type: registerDest.type, size: registerDest.size, value: newRegisterDestValue)
+                        let newRegisterSrc = Register(type: registerSrc.type, size: registerSrc.size, value: newRegisterSrcValue)
+                        
+                        self.registers.updateValue(newRegisterDest, forKey: registerDest.type)
+                        self.registers.updateValue(newRegisterSrc, forKey: registerSrc.type)
+                    }else{
+                        return false
+                    }
+                    
+                }else{
+                    ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(registerType.rawValue) does not exist", color: .red)
+                    return false
+                }
+                
+            default:
+                ConsoleLine.error("Asm Intel x86", "Instruction XCHG only accept register")
+                return false
+            }
+            
+            return true
         }
     }
     

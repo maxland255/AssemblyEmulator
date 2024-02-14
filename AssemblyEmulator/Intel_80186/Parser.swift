@@ -47,14 +47,16 @@ class Asm80186Parser {
                 
                 if let currentFuncInstruction = currentFuncInstruction{
                     if currentFuncInstruction.instructions?.isEmpty ?? true{
-                        ConsoleLine.shared.error("Asm Intel x86", "Error function \(currentFuncInstruction.functionName ?? "") without any instructions is not allowed")
+                        let error = NoFunctionInstruction(funcName: currentFuncInstruction.functionName ?? "", line: currentFuncInstruction.lineNumber.toUInt(), lineText: currentFuncInstruction.lineValue)
+                        ConsoleLine.error(error: error)
                         return ([], [:])
                     }
                     
                     instructions.append(currentFuncInstruction)
                     
                     if functionsInstructions.contains(where: {$0.key == currentFuncInstruction.functionName}){
-                        ConsoleLine.shared.error("Asm Intel x86", "Error, two functions with the same name detected")
+                        let error = TwoFunctionSameName(funcName: currentFuncInstruction.functionName ?? "", line: currentFuncInstruction.lineNumber.toUInt(), column: 0, endError: nil, lineText: currentFuncInstruction.lineValue)
+                        ConsoleLine.error(error: error)
                         return ([], [:])
                     }
                     
@@ -65,7 +67,7 @@ class Asm80186Parser {
             }
             
             if let opCode = parseOpCode(opCodeString) {
-                if self.parseFunction, let parsedOperands = parseOperands(operands){
+                if self.parseFunction, let parsedOperands = parseOperands(operands, line: line, lines: lines){
                     let lineIndex = linesRemoved.firstIndex(of: line)
                     
                     let instruction = Instruction(opcode: opCode, operands: parsedOperands, lineNumber: (lineIndex ?? -1) + 1, lineValue: line, function: false, functionName: nil, instructions: nil)
@@ -89,7 +91,7 @@ class Asm80186Parser {
                     if let lineIndex = lineIndex{
                         linesRemoved[lineIndex] += Date().ISO8601Format()
                     }
-                }else if let parsedOperands = parseOperands(operands) {
+                }else if let parsedOperands = parseOperands(operands, line: line, lines: lines) {
                     let lineIndex = linesRemoved.firstIndex(of: line)
                     
                     let instruction = Instruction(opcode: opCode, operands: parsedOperands, lineNumber: (lineIndex ?? -1) + 1, lineValue: line, function: false, functionName: nil, instructions: nil)
@@ -103,21 +105,26 @@ class Asm80186Parser {
                     return ([], [:])
                 }
             }else{
-                ConsoleLine.shared.error("Asm Intel x86", "Error to parse instruction: \(line)")
+                let opCodeStringFiltered = opCodeString.filter({ $0 != " " && $0 != "\t"})
+                let column = opCodeString.filter({ $0 == " "}).count + opCodeString.filter({ $0 == "\t" }).count * 4
+                let error = InvalidSyntaxe(line: (lines.firstIndex(of: line)?.toUInt() ?? 0) + 1, column: column.toUInt(), endError: opCodeStringFiltered.count.toUInt(), lineText: line)
+                ConsoleLine.error(error: error)
                 return ([], [:])
             }
         }
         
         if let currentFuncInstruction = currentFuncInstruction{
             if currentFuncInstruction.instructions?.isEmpty ?? true{
-                ConsoleLine.shared.error("Asm Intel x86", "Error function \(currentFuncInstruction.functionName ?? "") without any instructions is not allowed")
+                let error = NoFunctionInstruction(funcName: currentFuncInstruction.functionName ?? "", line: currentFuncInstruction.lineNumber.toUInt(), lineText: currentFuncInstruction.lineValue)
+                ConsoleLine.error(error: error)
                 return ([], [:])
             }
             
             instructions.append(currentFuncInstruction)
             
             if functionsInstructions.contains(where: {$0.key == currentFuncInstruction.functionName}){
-                ConsoleLine.shared.error("Asm Intel x86", "Error, two functions with the same name detected (\(currentFuncInstruction.functionName ?? "Error")")
+                let error = TwoFunctionSameName(funcName: currentFuncInstruction.functionName ?? "", line: currentFuncInstruction.lineNumber.toUInt(), column: 0, endError: nil, lineText: currentFuncInstruction.lineValue)
+                ConsoleLine.error(error: error)
                 return ([], [:])
             }
             
@@ -132,6 +139,8 @@ class Asm80186Parser {
 //            Transfer
         case "\(parseFunc ?? self.parseFunction ? "\t" : "")mov":
             return .mov
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")xchg":
+            return .xchg
             
 //            Arithemtic
         case "\(parseFunc ?? self.parseFunction ? "\t" : "")add":
@@ -192,7 +201,7 @@ class Asm80186Parser {
         }
     }
     
-    private func parseOperands(_ operandsString: [String]) -> [Operand]? {
+    private func parseOperands(_ operandsString: [String], line: String, lines: [String]) -> [Operand]? {
         var operands = [Operand]()
         
         for operand in operandsString {
@@ -205,7 +214,10 @@ class Asm80186Parser {
             }else if self.functionAvailable.contains(operand){
                 operands.append(.functions(operand))
             }else{
-                ConsoleLine.shared.error("Asm Intel x86", "Error to parse operand: \(operand)")
+                let beforOperand = line.split(separator: operand).first ?? ""
+                let column: UInt = beforOperand.count.toUInt() + beforOperand.filter({ $0 == "\t" }).count.toUInt() * 3
+                let error = InvalidOperand(operand: operand, line: (lines.firstIndex(of: line)?.toUInt() ?? 0) + 1, column: column, endError: operand.count.toUInt(), lineText: line)
+                ConsoleLine.error(error: error)
                 return nil
             }
         }

@@ -14,6 +14,7 @@
 		B82700DF2B7278DE007742EC /* extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82700DE2B7278DE007742EC /* extensions.swift */; };
 		B849305E2B5B1A4700404DF1 /* CodeEditorView in Frameworks */ = {isa = PBXBuildFile; productRef = B849305D2B5B1A4700404DF1 /* CodeEditorView */; };
 		B84930602B5B1A4700404DF1 /* LanguageSupport in Frameworks */ = {isa = PBXBuildFile; productRef = B849305F2B5B1A4700404DF1 /* LanguageSupport */; };
+		B85D2A2D2B7D3976001C141D /* X86Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85D2A2C2B7D3976001C141D /* X86Error.swift */; };
 		B88F52A02B5C734300A854A0 /* Modifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88F529F2B5C734300A854A0 /* Modifier.swift */; };
 		B897F18D2B588A9D0041917F /* AssemblyEmulatorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B897F18C2B588A9D0041917F /* AssemblyEmulatorApp.swift */; };
 		B897F18F2B588A9D0041917F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B897F18E2B588A9D0041917F /* ContentView.swift */; };
@@ -32,6 +33,7 @@
 		B80AD3EF2B59A16C00B2C04E /* VisualEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEffect.swift; sourceTree = "<group>"; };
 		B80AD3F12B59CD4500B2C04E /* AboutWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindow.swift; sourceTree = "<group>"; };
 		B82700DE2B7278DE007742EC /* extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = extensions.swift; sourceTree = "<group>"; };
+		B85D2A2C2B7D3976001C141D /* X86Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = X86Error.swift; sourceTree = "<group>"; };
 		B88F529F2B5C734300A854A0 /* Modifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Modifier.swift; sourceTree = "<group>"; };
 		B897F1892B588A9D0041917F /* AssemblyEmulator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AssemblyEmulator.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B897F18C2B588A9D0041917F /* AssemblyEmulatorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssemblyEmulatorApp.swift; sourceTree = "<group>"; };
@@ -118,6 +120,7 @@
 				B897F1A02B5891650041917F /* Parser.swift */,
 				B897F1A22B5897700041917F /* Interpreter.swift */,
 				B80AD3ED2B599AC400B2C04E /* Intel_x86_80186_UI.swift */,
+				B85D2A2C2B7D3976001C141D /* X86Error.swift */,
 			);
 			path = Intel_80186;
 			sourceTree = "<group>";
@@ -202,6 +205,7 @@
 				B897F1A32B5897700041917F /* Interpreter.swift in Sources */,
 				B897F18F2B588A9D0041917F /* ContentView.swift in Sources */,
 				B80AD3F02B59A16C00B2C04E /* VisualEffect.swift in Sources */,
+				B85D2A2D2B7D3976001C141D /* X86Error.swift in Sources */,
 				B80AD3EC2B599A1500B2C04E /* Enum.swift in Sources */,
 				B897F19D2B588C400041917F /* Registres.swift in Sources */,
 				B897F1A52B58A2000041917F /* Console.swift in Sources */,
@@ -341,6 +345,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = AssemblyEmulator/AssemblyEmulator.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -353,7 +358,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = AssemblyEmulator;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 pieteraerens.eu";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -372,6 +377,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = AssemblyEmulator/AssemblyEmulator.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -384,7 +390,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = AssemblyEmulator;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2024 pieteraerens.eu";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

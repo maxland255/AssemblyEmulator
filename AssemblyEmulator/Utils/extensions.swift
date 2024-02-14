@@ -25,3 +25,15 @@ extension Array{
         return true
     }
 }
+
+extension UInt{
+    func toInt() -> Int{
+        return Int(self)
+    }
+}
+
+extension Int{
+    func toUInt() -> UInt{
+        return UInt(self)
+    }
+}

@@ -22,6 +22,7 @@ struct Instruction {
 enum OpCode: String, CaseIterable {
 //    Transfer
     case mov
+    case xchg
     
 //    Arithmetic
     case add

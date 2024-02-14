@@ -47,12 +47,9 @@ struct Intel_x86_80186_UI: View {
                     position: $editPosition,
                     messages: $messages,
                     language: .intel_x86(),
-                    layout: CodeEditor.LayoutConfiguration(showMinimap: false, wrapText: false)
+                    layout: CodeEditor.LayoutConfiguration(showMinimap: false, wrapText: true)
                 )
                     .environment(\.codeEditorTheme, colorScheme == .dark ? Theme.defaultDark : Theme.defaultLight)
-                
-//                TextEditor(text: $sourceCode)
-//                    .font(Font.system(size: 14))
                 
                 ConsoleView()
             }
@@ -118,6 +115,14 @@ struct Intel_x86_80186_UI: View {
                             .help("Kill program (Command + k)")
                         
                         Button {
+                            // Reset all register
+                            switch processor {
+                            case .none:
+                                interpreter.registers = [:]
+                            case .intel_80186, .intel_80286:
+                                interpreter.registers = processor.getProcessorRegister()
+                            }
+                            
                             let result_interpreter = interpreter.interpretStepByStep(nil, nil, index: interpreter.stepNumber - 1)
                             
                             if result_interpreter == false{
@@ -130,6 +135,14 @@ struct Intel_x86_80186_UI: View {
                             .help("Kill program (Command + <-)")
                         
                         Button {
+                            // Reset all register
+                            switch processor {
+                            case .none:
+                                interpreter.registers = [:]
+                            case .intel_80186, .intel_80286:
+                                interpreter.registers = processor.getProcessorRegister()
+                            }
+                            
                             let result_interpreter = interpreter.interpretStepByStep(nil, nil, index: interpreter.stepNumber + 1)
                             
                             if result_interpreter == false{
@@ -235,12 +248,12 @@ extension LanguageConfiguration {
     public static func intel_x86(_ languageService: LanguageServiceBuilder? = nil) -> LanguageConfiguration{
         return LanguageConfiguration(
             name: "Intel_x86",
-            stringRegexp: "\"[^\"]*\"",
+            stringRegexp: "\"(.*?)\"",
             characterRegexp: nil,
-            numberRegexp: "(?:-)?(?:0[bB][01]+|0[xX][0-9a-fA-F]+|\\b\\d+\\b)",
+            numberRegexp: "^[0-9]+(b|h)?$",
             singleLineComment: ";",
             nestedComment: nil,
-            identifierRegexp: "\\b([a-zA-Z]+)\\s*((?:[a-zA-Z0-9]+(?:,\\s*)?)*)\\b",
+            identifierRegexp: "\\b([a-zA-Z]+\\s+)(?:([a-zA-Z0-9]+(?:,\\s*)?)*)\\b|\\b\\s*\\b",
             reservedIdentifiers: X86Register.values() + OpCode.values()
         )
     }

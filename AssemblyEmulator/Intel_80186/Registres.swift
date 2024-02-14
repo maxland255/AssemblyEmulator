@@ -52,7 +52,7 @@ struct Register: Hashable, Identifiable {
             if value <= Int16.max && value >= Int16.min{
                 return .int16(Int16(value))
             }else{
-                ConsoleLine.shared.appendLine("Asm Intel x86", "\(value <= Int16.max ? "Underflow" : "Overflow") for \(register.rawValue) detected (value: \(String(value, radix: 16))), max value allowed: \(String(Int16.max, radix: 16)) and min valued allowed: \(String(Int16.min, radix: 16))", color: .red)
+                ConsoleLine.error("Asm Intel x86", "\(value <= Int16.max ? "Underflow" : "Overflow") for \(register.rawValue) detected (value: \(String(value, radix: 16))), max value allowed: \(String(Int16.max, radix: 16)) and min valued allowed: \(String(Int16.min, radix: 16))")
                 return nil
             }
                 
@@ -62,7 +62,7 @@ struct Register: Hashable, Identifiable {
             if value <= Int32.max && value >= Int32.min{
                 return .int32(Int32(value))
             }else{
-                ConsoleLine.shared.appendLine("Asm Intel x86", "\(value <= Int32.max ? "Underflow" : "Overflow") for \(register.rawValue) detected (value: \(String(value, radix: 16))), max value allowed: \(String(Int32.max, radix: 16)) and min valued allowed: \(String(Int32.min, radix: 16))", color: .red)
+                ConsoleLine.error("Asm Intel x86", "\(value <= Int32.max ? "Underflow" : "Overflow") for \(register.rawValue) detected (value: \(String(value, radix: 16))), max value allowed: \(String(Int32.max, radix: 16)) and min valued allowed: \(String(Int32.min, radix: 16))")
                 return nil
             }
             
@@ -72,7 +72,7 @@ struct Register: Hashable, Identifiable {
             if value <= Int64.max && value >= Int64.min{
                 return .int64(Int64(value))
             }else{
-                ConsoleLine.shared.appendLine("Asm Intel x86", "\(value <= Int64.max ? "Underflow" : "Overflow") for \(register.rawValue) detected (value: \(String(value, radix: 16))), max value allowed: \(String(Int64.max, radix: 16)) and min valued allowed: \(String(Int64.min, radix: 16))", color: .red)
+                ConsoleLine.error("Asm Intel x86", "\(value <= Int64.max ? "Underflow" : "Overflow") for \(register.rawValue) detected (value: \(String(value, radix: 16))), max value allowed: \(String(Int64.max, radix: 16)) and min valued allowed: \(String(Int64.min, radix: 16))")
                 return nil
             }
         }
@@ -193,6 +193,13 @@ struct RegisterView: View {
                                 .onTapGesture {
                                     self.selectedRegister = register
                                 }
+                                .onHover { hovered in
+                                    if hovered{
+                                        NSCursor.pointingHand.push()
+                                    }else{
+                                        NSCursor.pointingHand.pop()
+                                    }
+                                }
                             
                             Spacer()
                         }
@@ -223,7 +230,7 @@ struct RegisterDetails: View {
                 Text("Binary value: \(String(register.value.value(), radix: 2))")
                     .textSelection(.enabled)
                 
-                Text("Hexadecimal value: \(String(register.value.value(), radix: 16))")
+                Text("Hexadecimal value: \(String(register.value.value(), radix: 16).uppercased())")
                     .textSelection(.enabled)
                 
                 Text("Decimal value: \(register.value.value())")

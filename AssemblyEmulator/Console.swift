@@ -51,6 +51,10 @@ class ConsoleLine: ObservableObject {
     static func info(_ programm: String, _ value: String) {
         self.shared.line.append(Console(color: .green, programm: "\(programm) (INFO)", value: value))
     }
+    
+    static func error(error: x86Error) {
+        self.shared.line.append(Console(color: .red, programm: "\(error.program) (ERROR)", value: error.getErrorString()))
+    }
 }
 
 
@@ -109,6 +113,7 @@ struct ConsoleView: View {
                                     HStack {
                                         Text("[\(line.programm)]: \(line.value)")
                                             .foregroundStyle(line.color)
+                                            .font(Font.system(size: 13, design: .monospaced))
                                             .textSelection(.enabled)
                                             .padding(2.5)
                                             .id(line.id)
