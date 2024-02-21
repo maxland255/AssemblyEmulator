@@ -8,7 +8,7 @@
 import Foundation
 
 
-class Asm80186Parser {
+class Asmx86Parser {
     
     private var parseFunction = false
     private var functionAvailable = [String]()

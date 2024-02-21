@@ -52,7 +52,7 @@ struct ConsoleFilterButtonField: ViewModifier {
 enum ConsoleFilter: String, CaseIterable{
     case error = "Error"
     case warning = "Warning"
-    case success = "Success"
+    case success = "Info"
     case debug = "Debug"
 }
 

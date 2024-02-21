@@ -11,16 +11,11 @@ struct ContentView: View {
     
     @State var emulatorType: EmulatorType = .intel_x86
     
-    @State var parser = Asm80186Parser()
-    @ObservedObject var interpreter = Asm80186Interpreter()
-    
-    @State var sourceCode = ""
-    
     var body: some View {
         NavigationStack {
             switch emulatorType {
             case .intel_x86:
-                Intel_x86_80186_UI()
+                Intel_x86_UI()
             }
         }.toolbar {
             ToolbarItem(placement: .secondaryAction) {

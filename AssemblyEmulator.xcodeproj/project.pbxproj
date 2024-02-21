@@ -8,13 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		B80AD3EC2B599A1500B2C04E /* Enum.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80AD3EB2B599A1500B2C04E /* Enum.swift */; };
-		B80AD3EE2B599AC400B2C04E /* Intel_x86_80186_UI.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80AD3ED2B599AC400B2C04E /* Intel_x86_80186_UI.swift */; };
+		B80AD3EE2B599AC400B2C04E /* Intel_x86_UI.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80AD3ED2B599AC400B2C04E /* Intel_x86_UI.swift */; };
 		B80AD3F02B59A16C00B2C04E /* VisualEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80AD3EF2B59A16C00B2C04E /* VisualEffect.swift */; };
 		B80AD3F22B59CD4500B2C04E /* AboutWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80AD3F12B59CD4500B2C04E /* AboutWindow.swift */; };
 		B82700DF2B7278DE007742EC /* extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B82700DE2B7278DE007742EC /* extensions.swift */; };
 		B849305E2B5B1A4700404DF1 /* CodeEditorView in Frameworks */ = {isa = PBXBuildFile; productRef = B849305D2B5B1A4700404DF1 /* CodeEditorView */; };
 		B84930602B5B1A4700404DF1 /* LanguageSupport in Frameworks */ = {isa = PBXBuildFile; productRef = B849305F2B5B1A4700404DF1 /* LanguageSupport */; };
 		B85D2A2D2B7D3976001C141D /* X86Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = B85D2A2C2B7D3976001C141D /* X86Error.swift */; };
+		B86D14A62B857164002F6352 /* Assembly.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86D14A52B857164002F6352 /* Assembly.swift */; };
 		B88F52A02B5C734300A854A0 /* Modifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = B88F529F2B5C734300A854A0 /* Modifier.swift */; };
 		B897F18D2B588A9D0041917F /* AssemblyEmulatorApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B897F18C2B588A9D0041917F /* AssemblyEmulatorApp.swift */; };
 		B897F18F2B588A9D0041917F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B897F18E2B588A9D0041917F /* ContentView.swift */; };
@@ -29,11 +30,12 @@
 
 /* Begin PBXFileReference section */
 		B80AD3EB2B599A1500B2C04E /* Enum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enum.swift; sourceTree = "<group>"; };
-		B80AD3ED2B599AC400B2C04E /* Intel_x86_80186_UI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Intel_x86_80186_UI.swift; sourceTree = "<group>"; };
+		B80AD3ED2B599AC400B2C04E /* Intel_x86_UI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Intel_x86_UI.swift; sourceTree = "<group>"; };
 		B80AD3EF2B59A16C00B2C04E /* VisualEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEffect.swift; sourceTree = "<group>"; };
 		B80AD3F12B59CD4500B2C04E /* AboutWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutWindow.swift; sourceTree = "<group>"; };
 		B82700DE2B7278DE007742EC /* extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = extensions.swift; sourceTree = "<group>"; };
 		B85D2A2C2B7D3976001C141D /* X86Error.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = X86Error.swift; sourceTree = "<group>"; };
+		B86D14A52B857164002F6352 /* Assembly.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Assembly.swift; sourceTree = "<group>"; };
 		B88F529F2B5C734300A854A0 /* Modifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Modifier.swift; sourceTree = "<group>"; };
 		B897F1892B588A9D0041917F /* AssemblyEmulator.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AssemblyEmulator.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B897F18C2B588A9D0041917F /* AssemblyEmulatorApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssemblyEmulatorApp.swift; sourceTree = "<group>"; };
@@ -69,6 +71,14 @@
 			path = Utils;
 			sourceTree = "<group>";
 		};
+		B86D14A42B857147002F6352 /* Informations */ = {
+			isa = PBXGroup;
+			children = (
+				B86D14A52B857164002F6352 /* Assembly.swift */,
+			);
+			path = Informations;
+			sourceTree = "<group>";
+		};
 		B897F1802B588A9D0041917F = {
 			isa = PBXGroup;
 			children = (
@@ -88,6 +98,7 @@
 		B897F18B2B588A9D0041917F /* AssemblyEmulator */ = {
 			isa = PBXGroup;
 			children = (
+				B86D14A42B857147002F6352 /* Informations */,
 				B82700DD2B727879007742EC /* Utils */,
 				B897F19B2B588AF90041917F /* Intel_80186 */,
 				B80AD3EB2B599A1500B2C04E /* Enum.swift */,
@@ -119,7 +130,7 @@
 				B897F19E2B58903F0041917F /* Instructions.swift */,
 				B897F1A02B5891650041917F /* Parser.swift */,
 				B897F1A22B5897700041917F /* Interpreter.swift */,
-				B80AD3ED2B599AC400B2C04E /* Intel_x86_80186_UI.swift */,
+				B80AD3ED2B599AC400B2C04E /* Intel_x86_UI.swift */,
 				B85D2A2C2B7D3976001C141D /* X86Error.swift */,
 			);
 			path = Intel_80186;
@@ -203,6 +214,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B897F1A32B5897700041917F /* Interpreter.swift in Sources */,
+				B86D14A62B857164002F6352 /* Assembly.swift in Sources */,
 				B897F18F2B588A9D0041917F /* ContentView.swift in Sources */,
 				B80AD3F02B59A16C00B2C04E /* VisualEffect.swift in Sources */,
 				B85D2A2D2B7D3976001C141D /* X86Error.swift in Sources */,
@@ -211,7 +223,7 @@
 				B897F1A52B58A2000041917F /* Console.swift in Sources */,
 				B80AD3F22B59CD4500B2C04E /* AboutWindow.swift in Sources */,
 				B82700DF2B7278DE007742EC /* extensions.swift in Sources */,
-				B80AD3EE2B599AC400B2C04E /* Intel_x86_80186_UI.swift in Sources */,
+				B80AD3EE2B599AC400B2C04E /* Intel_x86_UI.swift in Sources */,
 				B88F52A02B5C734300A854A0 /* Modifier.swift in Sources */,
 				B897F1A12B5891650041917F /* Parser.swift in Sources */,
 				B897F19F2B58903F0041917F /* Instructions.swift in Sources */,

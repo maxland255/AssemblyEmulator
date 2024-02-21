@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 
-class Asm80186Interpreter: ObservableObject {
+class Asmx86Interpreter: ObservableObject {
     @Published var registers = [X86Register:Register]()
     @Published var stepNumber: UInt = 0
     @Published var maximumStep: UInt = 0

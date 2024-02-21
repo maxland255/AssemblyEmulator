@@ -25,6 +25,12 @@ struct AssemblyEmulatorApp: App {
                         Text("About \(NSApplication.appName)")
                     }
                 }
+                
+                CommandMenu("Info") {
+                    Button("Assembly") {
+                        appDelegate.toogleAssemblyInfoWindow()
+                    }
+                }
             }
     }
 }
@@ -50,6 +56,27 @@ class AppDelegate: NSObject, NSApplicationDelegate{
         }
         
         self.aboutWindow?.showWindow(self.aboutWindow?.window)
+    }
+    
+    // Assembly information window
+    private var assemblyInfoWindow: NSWindowController?
+    
+    func toogleAssemblyInfoWindow(){
+        if self.assemblyInfoWindow == nil{
+            let styleMask: NSWindow.StyleMask = [.closable, .titled]
+            let window = NSWindow()
+            
+            window.styleMask = styleMask
+            window.title = "About Assembly in \(NSApplication.appName)"
+            window.titlebarAppearsTransparent = true
+            window.center()
+            window.contentView = NSHostingView(rootView: Assembly())
+            window.backgroundColor = .controlBackgroundColor
+            
+            self.assemblyInfoWindow = NSWindowController(window: window)
+        }
+        
+        self.assemblyInfoWindow?.showWindow(self.assemblyInfoWindow?.window)
     }
 }
 
