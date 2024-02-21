@@ -9,13 +9,13 @@ import SwiftUI
 import CodeEditorView
 import LanguageSupport
 
-struct Intel_x86_80186_UI: View {
+struct Intel_x86_UI: View {
     
     @Environment(\.colorScheme) private var colorScheme: ColorScheme
     
-    @ObservedObject var interpreter = Asm80186Interpreter()
+    @ObservedObject var interpreter = Asmx86Interpreter()
     
-    @State var parser = Asm80186Parser()
+    @State var parser = Asmx86Parser()
     
     @State var processor: ProcessorType = .none
     
@@ -193,7 +193,7 @@ struct Intel_x86_80186_UI: View {
 }
 
 #Preview {
-    Intel_x86_80186_UI()
+    Intel_x86_UI()
 }
 
 
