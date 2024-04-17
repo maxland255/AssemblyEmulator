@@ -83,3 +83,9 @@ class TwoFunctionSameName: x86Error{
         super.init(details: "Two functions with the same name is not allowed (\(funcName))", line: line, column: column, endError: endError, lineText: lineText, program: program)
     }
 }
+
+class MainFunctionNotFound: x86Error{
+    init(funcName: String, program: String? = nil) {
+        super.init(details: "The global function: \(funcName) is not found in the code", line: 0, column: 0, endError: nil, lineText: "", program: program)
+    }
+}

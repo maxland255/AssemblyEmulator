@@ -19,7 +19,7 @@ struct Intel_x86_UI: View {
     
     @State var processor: ProcessorType = .none
     
-    @State var sourceCode = ""
+    @State var sourceCode = "section .text\nglobal main ;Define main function\nmain:\n\t;Write your code here"
     @SceneStorage("editPosition") private var editPosition: CodeEditor.Position = CodeEditor.Position()
     @State private var messages: Set<TextLocated<Message>> = Set ()
     
@@ -71,7 +71,7 @@ struct Intel_x86_UI: View {
                         let instructions = parser.parse(sourceCode)
                                                 
                         if !instructions.0.isEmpty || !instructions.1.isEmpty{
-                            interpreter.interpret(instructions.0, instructions.1, strict: processor != .none)
+                            interpreter.interpret(instructions.0, instructions.1, configuration: instructions.2, strict: processor != .none)
                         }
                     }, label: {
                         Image(systemName: "play.fill")
@@ -92,7 +92,7 @@ struct Intel_x86_UI: View {
                                                                 
                         if !instructions.0.isEmpty || !instructions.1.isEmpty{
                             self.runedStepByStep = true
-                            let result_interpreter = interpreter.interpretStepByStep(instructions.0, instructions.1, strict: processor != .none)
+                            let result_interpreter = interpreter.interpretStepByStep(instructions.0, instructions.1, configuration: instructions.2, strict: processor != .none)
                                                         
                             if result_interpreter == false{
                                 self.stopInterpreter()
@@ -123,7 +123,7 @@ struct Intel_x86_UI: View {
                                 interpreter.registers = processor.getProcessorRegister()
                             }
                             
-                            let result_interpreter = interpreter.interpretStepByStep(nil, nil, index: interpreter.stepNumber - 1)
+                            let result_interpreter = interpreter.interpretStepByStep(nil, nil, configuration: nil, index: interpreter.stepNumber - 1)
                             
                             if result_interpreter == false{
                                 self.stopInterpreter()
@@ -143,7 +143,7 @@ struct Intel_x86_UI: View {
                                 interpreter.registers = processor.getProcessorRegister()
                             }
                             
-                            let result_interpreter = interpreter.interpretStepByStep(nil, nil, index: interpreter.stepNumber + 1)
+                            let result_interpreter = interpreter.interpretStepByStep(nil, nil, configuration: nil, index: interpreter.stepNumber + 1)
                             
                             if result_interpreter == false{
                                 self.stopInterpreter()
@@ -249,10 +249,10 @@ extension LanguageConfiguration {
         return LanguageConfiguration(
             name: "Intel_x86",
             stringRegexp: "\"(.*?)\"",
-            characterRegexp: nil,
+            characterRegexp: "\"(.*?)\"",
             numberRegexp: "^[0-9]+(b|h)?$",
             singleLineComment: ";",
-            nestedComment: nil,
+            nestedComment: nil, //(open: "/*", close: "*/"),
             identifierRegexp: "\\b([a-zA-Z]+\\s+)(?:([a-zA-Z0-9]+(?:,\\s*)?)*)\\b|\\b\\s*\\b",
             reservedIdentifiers: X86Register.values() + OpCode.values()
         )

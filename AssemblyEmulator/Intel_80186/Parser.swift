@@ -13,9 +13,10 @@ class Asmx86Parser {
     private var parseFunction = false
     private var functionAvailable = [String]()
     
-    func parse(_ sourceCode: String) -> ([Instruction], [String:Instruction]) {
+    func parse(_ sourceCode: String) -> ([Instruction], [String:Instruction], Configuration) {
         var instructions = [Instruction]()
         var functionsInstructions = [String:Instruction]()
+        var configuration = Configuration(section: nil, global: nil)
         
 //        Divides source code online
         let lines = sourceCode.components(separatedBy: .newlines)
@@ -39,7 +40,11 @@ class Asmx86Parser {
             }
             
             let opCodeString = components[0]
-            let operands = Array(components.dropFirst().joined(separator: "").components(separatedBy: ",").filter { !$0.isEmpty })
+            
+            let operandsArrayComment = components.dropFirst().joined(separator: "").components(separatedBy: ";")
+            let operandsString = operandsArrayComment.first!
+                        
+            let operands = Array(operandsString.components(separatedBy: ",").filter { !$0.isEmpty })
             
             
             if self.parseFunction && !opCodeString.hasPrefix("\t"){
@@ -49,7 +54,7 @@ class Asmx86Parser {
                     if currentFuncInstruction.instructions?.isEmpty ?? true{
                         let error = NoFunctionInstruction(funcName: currentFuncInstruction.functionName ?? "", line: currentFuncInstruction.lineNumber.toUInt(), lineText: currentFuncInstruction.lineValue)
                         ConsoleLine.error(error: error)
-                        return ([], [:])
+                        return ([], [:], configuration)
                     }
                     
                     instructions.append(currentFuncInstruction)
@@ -57,7 +62,7 @@ class Asmx86Parser {
                     if functionsInstructions.contains(where: {$0.key == currentFuncInstruction.functionName}){
                         let error = TwoFunctionSameName(funcName: currentFuncInstruction.functionName ?? "", line: currentFuncInstruction.lineNumber.toUInt(), column: 0, endError: nil, lineText: currentFuncInstruction.lineValue)
                         ConsoleLine.error(error: error)
-                        return ([], [:])
+                        return ([], [:], configuration)
                     }
                     
                     functionsInstructions.updateValue(currentFuncInstruction, forKey: currentFuncInstruction.functionName!)
@@ -66,7 +71,18 @@ class Asmx86Parser {
                 currentFuncInstruction = nil
             }
             
-            if let opCode = parseOpCode(opCodeString) {
+            if let configOpCode = parseConfiguration(opCodeString, value: operands.first, line: line, lines: lines){
+                
+                if configOpCode.1{
+                    return ([], [:], configuration)
+                }
+                
+                if let global = configOpCode.0?.global{
+                    configuration.global = global
+                }else if let section = configOpCode.0?.section {
+                    configuration.section = section
+                }
+            }else if let opCode = parseOpCode(opCodeString) {
                 if self.parseFunction, let parsedOperands = parseOperands(operands, line: line, lines: lines){
                     let lineIndex = linesRemoved.firstIndex(of: line)
                     
@@ -102,14 +118,14 @@ class Asmx86Parser {
                     
                     instructions.append(instruction)
                 }else{
-                    return ([], [:])
+                    return ([], [:], configuration)
                 }
             }else{
                 let opCodeStringFiltered = opCodeString.filter({ $0 != " " && $0 != "\t"})
                 let column = opCodeString.filter({ $0 == " "}).count + opCodeString.filter({ $0 == "\t" }).count * 4
                 let error = InvalidSyntaxe(line: (lines.firstIndex(of: line)?.toUInt() ?? 0) + 1, column: column.toUInt(), endError: opCodeStringFiltered.count.toUInt(), lineText: line)
                 ConsoleLine.error(error: error)
-                return ([], [:])
+                return ([], [:], configuration)
             }
         }
         
@@ -117,7 +133,7 @@ class Asmx86Parser {
             if currentFuncInstruction.instructions?.isEmpty ?? true{
                 let error = NoFunctionInstruction(funcName: currentFuncInstruction.functionName ?? "", line: currentFuncInstruction.lineNumber.toUInt(), lineText: currentFuncInstruction.lineValue)
                 ConsoleLine.error(error: error)
-                return ([], [:])
+                return ([], [:], configuration)
             }
             
             instructions.append(currentFuncInstruction)
@@ -125,13 +141,13 @@ class Asmx86Parser {
             if functionsInstructions.contains(where: {$0.key == currentFuncInstruction.functionName}){
                 let error = TwoFunctionSameName(funcName: currentFuncInstruction.functionName ?? "", line: currentFuncInstruction.lineNumber.toUInt(), column: 0, endError: nil, lineText: currentFuncInstruction.lineValue)
                 ConsoleLine.error(error: error)
-                return ([], [:])
+                return ([], [:], configuration)
             }
             
             functionsInstructions.updateValue(currentFuncInstruction, forKey: currentFuncInstruction.functionName!)
         }
         
-        return (instructions, functionsInstructions)
+        return (instructions, functionsInstructions, configuration)
     }
     
     private func parseOpCode(_ opCode: String, parseFunc: Bool? = nil) -> OpCode? {
@@ -184,12 +200,19 @@ class Asmx86Parser {
             
         case "\(parseFunc ?? self.parseFunction ? "\t" : "")call":
             return .call
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")ret":
+            return .ret
         case "\(parseFunc ?? self.parseFunction ? "\t" : "")jmp":
             return .jmp
             
 //            Stop
         case "\(parseFunc ?? self.parseFunction ? "\t" : "")hlt":
             return .hlt
+            
+//            Custom Element
+        case "\(parseFunc ?? self.parseFunction ? "\t" : "")print":
+            return .PRINT
+            
         default:
             if opCode.hasSuffix(":"){
                 return .funcLabel
@@ -223,6 +246,32 @@ class Asmx86Parser {
         }
         
         return operands
+    }
+    
+    private func parseConfiguration(_ configurationOpCode: String, value: String?, line: String, lines: [String]) -> (Configuration?, Bool)? {
+        if let value = value{
+            if configurationOpCode == "section"{
+                let sectionType = IntelX86Section(rawValue: IntelX86Section.RawValue(stringLiteral: String(value.dropFirst())))
+                
+                if sectionType == nil {
+                    let beforOperand = line.split(separator: value).first ?? ""
+                    let column: UInt = beforOperand.count.toUInt() + beforOperand.filter({ $0 == "\t" }).count.toUInt() * 3
+                    let error = InvalidOperand(operand: value, line: (lines.firstIndex(of: line)?.toUInt() ?? 0) + 1, column: column, endError: value.count.toUInt(), lineText: line)
+                    ConsoleLine.error(error: error)
+                    return (nil, true)
+                }
+                
+                let config = Configuration(section: sectionType!, global: nil)
+                return (config, false)
+            }else if configurationOpCode == "global"{
+                let config = Configuration(section: nil, global: value)
+                return (config, false)
+            }else{
+                return nil
+            }
+        }else{
+            return nil
+        }
     }
     
     private func getFunctionName(operand: String) -> String{

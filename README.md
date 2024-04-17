@@ -16,7 +16,6 @@ The emulator supports various assembly languages. Here is the current status of 
 |--------------------|-----------------------|
 | Intel x86          | In development        |
 | MicroLanguage x86  | Not implemented       |
-| Intel x64          | Not implemented       |
 | Custom assembly    | Not implemented       |
 
 ## Getting Started

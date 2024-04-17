@@ -48,6 +48,7 @@ enum OpCode: String, CaseIterable {
     
 //    Jumps
     case call
+    case ret
     case jmp
     
 //    Stop
@@ -55,6 +56,9 @@ enum OpCode: String, CaseIterable {
     
 //    Functions
     case funcLabel
+    
+//    Custom Element
+    case PRINT
 }
 
 extension OpCode{

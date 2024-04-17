@@ -23,17 +23,40 @@ class Asmx86Interpreter: ObservableObject {
     var strict: Bool = false
     var instructions = [Instruction]()
     var funcInstructions = [String:Instruction]()
+    var configuration: Configuration?
+    var call_address: stack_t = stack_t()
     
-    func interpret(_ instructions: [Instruction], _ funcInstructions: [String:Instruction], strict: Bool = false) {
+    func interpret(_ instructions: [Instruction], _ funcInstructions: [String:Instruction], configuration: Configuration, strict: Bool = false) {
         self.strict = strict
         self.runed = true
+        self.configuration = configuration
+                
+        if configuration.global == nil {
+            let error = x86Error(details: "The global operand not found", line: 0, column: 0, endError: nil, lineText: "")
+            ConsoleLine.error(error: error)
+            ConsoleLine.error("Asm Intel x86", "Stopping...")
+            self.runed = false
+            return
+        }else if configuration.section == nil {
+            let error = x86Error(details: "The section operand not found", line: 0, column: 0, endError: nil, lineText: "")
+            ConsoleLine.error(error: error)
+            ConsoleLine.error("Asm Intel x86", "Stopping...")
+            self.runed = false
+            return
+        }else if funcInstructions[configuration.global!] == nil {
+            let error = MainFunctionNotFound(funcName: configuration.global!)
+            ConsoleLine.error(error: error)
+            ConsoleLine.error("Asm Intel x86", "Stopping...")
+            self.runed = false
+            return
+        }
         
         for instruction in instructions {
-            if instruction.function && instruction.functionName != "main" {
+            if instruction.function && instruction.functionName != self.configuration?.global! {
                 continue
             }
             
-            let result_execute = instruction.opcode == .funcLabel && instruction.functionName == "main" ? self.executeFunction(funcInstructions, functionName: "main") : self.executeInstruction(instruction, funcInstructions)
+            let result_execute = instruction.opcode == .funcLabel && instruction.functionName == self.configuration?.global! ? self.executeFunction(funcInstructions, functionName: (self.configuration?.global!)!) : self.executeInstruction(instruction, funcInstructions)
             
             if result_execute == nil{
                 return
@@ -51,13 +74,41 @@ class Asmx86Interpreter: ObservableObject {
     ///
     ///Run interpreter step by step
     ///
-    func interpretStepByStep(_ instructions: [Instruction]?, _ funcInstructions: [String:Instruction]?, strict: Bool? = nil, index: UInt = 0) -> Bool?{
+    func interpretStepByStep(_ instructions: [Instruction]?, _ funcInstructions: [String:Instruction]?, configuration: Configuration?, strict: Bool? = nil, index: UInt = 0) -> Bool?{
         if let strict = strict{
             self.strict = strict
         }
         
+        if let configuration = configuration{
+            self.configuration = configuration
+        }
+        
+        if let funcInstructions = funcInstructions {
+            self.funcInstructions = funcInstructions
+        }
+        
         self.runed = true
         self.stepNumber = index
+        
+        if self.configuration!.global == nil {
+            let error = x86Error(details: "The global operand not found", line: 0, column: 0, endError: nil, lineText: "")
+            ConsoleLine.error(error: error)
+            ConsoleLine.error("Asm Intel x86", "Stopping...")
+            self.runed = false
+            return false
+        }else if self.configuration!.section == nil {
+            let error = x86Error(details: "The section operand not found", line: 0, column: 0, endError: nil, lineText: "")
+            ConsoleLine.error(error: error)
+            ConsoleLine.error("Asm Intel x86", "Stopping...")
+            self.runed = false
+            return false
+        }else if self.funcInstructions[self.configuration!.global!] == nil {
+            let error = MainFunctionNotFound(funcName: self.configuration!.global!)
+            ConsoleLine.error(error: error)
+            ConsoleLine.error("Asm Intel x86", "Stopping...")
+            self.runed = false
+            return false
+        }
         
         if instructions == nil && self.instructions.isEmpty{
             self.runed = false
@@ -74,10 +125,6 @@ class Asmx86Interpreter: ObservableObject {
             }
         }
         
-        if let funcInstructions = funcInstructions {
-            self.funcInstructions = funcInstructions
-        }
-        
         self.executeInstructions = 0
         self.executeFuncInstructions = 0
         self.skipedInstruction = 0
@@ -87,8 +134,8 @@ class Asmx86Interpreter: ObservableObject {
             if ((instructions ?? self.instructions).firstIndex(where: { $0.id == instruction.id }))! - Int(self.skipedInstruction) + Int(self.executeFuncInstructions) <= index{
                 var result_execute: Bool? = false
                 
-                if instruction.function && instruction.functionName == "main"{
-                    result_execute = self.executeFunctionStepByStep(funcInstructions ?? self.funcInstructions, functionName: "main", index: index)
+                if instruction.function && instruction.functionName == self.configuration?.global ?? ""{
+                    result_execute = self.executeFunctionStepByStep(funcInstructions ?? self.funcInstructions, functionName: self.configuration?.global ?? "", index: index)
                 }else if instruction.function {
                     self.skipedInstruction += 1
                     continue
@@ -131,6 +178,10 @@ class Asmx86Interpreter: ObservableObject {
         if let instruction = instruction{
             
             for instruct in instruction.instructions ?? []{
+                if instruct.opcode == .ret{
+                    print("Stop current function and continue the last function")
+                }
+                
                 let result_execute = self.executeInstruction(instruct, funcInstructions)
                 
                 if result_execute == nil || result_execute == false{
@@ -259,6 +310,10 @@ class Asmx86Interpreter: ObservableObject {
         case .call:
             ConsoleLine.warning("Asm Intel x86", "The CALL instruction does not behave as a real CALL instruction; at the moment, it functions the same as the JMP instruction")
             return self.executeJmp(instruction, funcInstruction, index: index)
+        case .ret:
+            let error = NotSupported(instruction: "RET", line: instruction.lineNumber.toUInt(), column: 0, endError: instruction.lineValue.count.toUInt(), lineText: instruction.lineValue)
+            ConsoleLine.error(error: error)
+            return false
         case .jmp:
             return self.executeJmp(instruction, funcInstruction, index: index)
         
@@ -270,6 +325,10 @@ class Asmx86Interpreter: ObservableObject {
 //            Function
         case .funcLabel:
             return true
+            
+//            Custom element
+        case .PRINT:
+            return self.executePRINT(instruction)
         }
     }
     
@@ -972,6 +1031,40 @@ class Asmx86Interpreter: ObservableObject {
             }
             
             return true
+        }
+    }
+    
+    
+    private func executePRINT(_ instruction: Instruction) -> Bool? {
+        guard instruction.operands.count == 1 else {
+//            Error
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Instruction \(instruction.opcode.rawValue.uppercased()) require 1 arguments", color: .red)
+            return false
+        }
+        
+        let operand = instruction.operands[0]
+        
+        switch operand {
+        case .register(let register):
+            let _ = verifyRegisterExist(register, strict: self.strict)
+            
+            if let register = self.registers.first(where: { $0.key == register })?.value {
+                ConsoleLine.debug("USER", String(register.value.value()))
+                return true
+            }else{
+//                Error
+                ConsoleLine.shared.appendLine("Asm Intel x86", "Register \(register.rawValue) does not exist", color: .red)
+                return false
+            }
+        case .immediate(let imediate):
+            ConsoleLine.debug("USER", String(imediate))
+            return true
+        case .memory(_):
+            ConsoleLine.shared.appendLine("Asm Intel x86", "Memory is not supported", color: .red)
+            return false
+        default:
+            ConsoleLine.error("Asm Intel x86", "Instruction XCHG only accept register")
+            return false
         }
     }
     

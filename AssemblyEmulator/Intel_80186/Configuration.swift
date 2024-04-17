@@ -6,3 +6,15 @@
 //
 
 import Foundation
+
+
+struct Configuration {
+    var section: IntelX86Section?
+    var global: String?
+}
+
+enum IntelX86Section: String {
+    case text
+    case data
+    case bss
+}
