@@ -40,5 +40,5 @@ If you would like to contribute to the development of AssemblyEmulator, please f
 
 ## License
 
-This project is licensed under the [Attribution-NonCommercial-ShareAlike 4.0 International License](LICENSE).
+This project is licensed under the [Attribution-NonCommercial-ShareAlike 4.0 International License](LICENSE.md).
 
